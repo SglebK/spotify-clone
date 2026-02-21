@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Track {
+  id        String   @id @default(uuid())
+  title     String
+  artist    String
+  url       String
+  cover     String
+
+  createdAt DateTime @default(now())
+  deletedAt DateTime?
+  restoredAt DateTime?
+
+  playlistTracks PlaylistTrack[]
+}
+
+model Playlist {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+
+  createdAt DateTime @default(now())
+  deletedAt DateTime?
+  restoredAt DateTime?
+
+  tracks PlaylistTrack[]
+}
+
+model PlaylistTrack {
+  playlistId String
+  trackId    String
+  order      Int
+
+  createdAt DateTime @default(now())
+  deletedAt DateTime?
+  restoredAt DateTime?
+
+  playlist Playlist @relation(fields: [playlistId], references: [id])
+  track    Track    @relation(fields: [trackId], references: [id])
+
+  @@id([playlistId, trackId])
+}
