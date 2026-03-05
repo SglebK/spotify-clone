@@ -1,7 +1,7 @@
 node_modules
 # Keep environment variables and local data out of version control
-.env
-backend/.env
+# .env
+# backend/.env
 
 # uploads contain user media
 /uploads/
