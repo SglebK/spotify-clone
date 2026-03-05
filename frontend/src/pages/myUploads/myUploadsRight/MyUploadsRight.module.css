@@ -1,0 +1,102 @@
+/*src/pages/myUploads/myUploadsRight/MyUploadsRight.module.css*/
+/* Основной контейнер правой панели */
+/* Основной контейнер правой панели */
+.right {
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    gap: 24px;
+
+    padding: 30px;
+    background: var(--bg);
+    color: var(--text);
+
+    border-radius: 14px;
+    border: 1px solid var(--button-border);
+    box-shadow: 0 4px 10px var(--button-shadow);
+}
+
+/* Плейсхолдер */
+.placeholder {
+    opacity: 0.6;
+    font-size: 18px;
+    text-align: center;
+    margin-top: 40px;
+}
+
+/* Панель кнопок — 5 одинаковых */
+.grid321 {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+}
+
+/* Локальный фикс для глобального .button */
+.buttonFix {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+
+    padding: 6px 12px !important;
+    font-size: 14px !important;
+    border-radius: 10px !important;
+}
+
+/* Чекбокс — как кнопка */
+.grid3213 {
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    height: 32px;
+    padding: 4px 10px;
+
+    background: var(--button-bg);
+    border: 1px solid var(--button-border);
+    border-radius: 10px;
+
+    box-shadow: 0 2px 4px var(--button-shadow);
+    cursor: pointer;
+}
+
+.grid3213 input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Название + исполнитель */
+.grid322 {
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: 4px;
+}
+
+.title {
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.artist {
+    opacity: 0.7;
+}
+
+/* Обложка */
+.grid323 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cover {
+    width: 260px;
+    height: 260px;
+    object-fit: contain;
+    border-radius: 12px;
+    background: #111;
+}

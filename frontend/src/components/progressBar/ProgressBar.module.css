@@ -1,0 +1,38 @@
+/* src/components/progressBar/ProgressBar.module.css*/
+.wrapper {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.bar {
+  position: relative;
+  width: 100%;
+  height: 6px; /* толщина полосы */
+  background: var(--progress-fill);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.fill {
+  height: 100%;
+  background: var(--progress-bg);
+  border-radius: 4px;
+  transition: none; /* мы сами делаем плавность через JS */
+}
+
+.thumb {
+  position: absolute;
+  top: 50%;
+  width: 14px; /* размер кружка */
+  height: 14px;
+  background: var(--progress-bg);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  transition: background 0.2s ease;
+}
+
+.thumb:active {
+  cursor: grabbing;
+}

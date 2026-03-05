@@ -1,0 +1,95 @@
+/*src/pages/uploadTrack/UploadTrack.module.css*/
+/* Центрирование всей страницы */
+.wrapper {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+}
+
+/* Карточка */
+.card {
+    position: relative;
+    width: 850px;
+    padding: 35px;
+    border-radius: 16px;
+    background: var(--bg2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+/* Основная сетка */
+.grid3A {
+    display: grid;
+    grid-template-rows: auto auto auto;
+    gap: 20px;
+}
+
+/* Заголовок */
+.grid31 {
+    text-align: center;
+}
+
+.title {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Форма */
+
+
+.form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+}
+
+.label {
+    display: grid;
+    gap: 6px;
+    font-size: 15px;
+}
+
+/* ⭐ File input — закруглённый, тематический */
+.inputFile {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--input-text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.inputFile:hover {
+    opacity: 0.85;
+}
+
+/* Кнопка "Выбрать файл" */
+.inputFile::file-selector-button {
+    padding: 8px 14px;
+    margin-right: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--button-border);
+    background: var(--button-bg);
+    color: var(--button-text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.inputFile::file-selector-button:hover {
+    transform: translateY(-1px);
+}
+
+/* Сообщение */
+.grid33 {
+    text-align: center;
+}
+
+.message {
+    font-weight: 600;
+    padding: 10px 15px;
+    border-radius: 8px;
+    background: var(--bg1);
+    display: inline-block;
+}

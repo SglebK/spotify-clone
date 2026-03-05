@@ -1,5 +1,11 @@
 node_modules
-# Keep environment variables out of version control
+# Keep environment variables and local data out of version control
 .env
+backend/.env
 
+# uploads contain user media
+/uploads/
+
+# database file (SQLite) and prisma client
+dev.db
 /src/generated/prisma

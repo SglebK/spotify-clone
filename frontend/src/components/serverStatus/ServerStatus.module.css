@@ -1,0 +1,30 @@
+.status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* Цвета под статус */
+.ok {
+  color: #2ecc71;
+}
+
+.warn {
+  color: #f1c40f;
+}
+
+.error {
+  color: #e74c3c;
+}
+
+.checking {
+  color: #95a5a6;
+}
+
+.icon {
+  font-size: 16px;
+}

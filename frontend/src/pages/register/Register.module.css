@@ -1,0 +1,55 @@
+.grid3 {
+  display: flex;
+  justify-content: center;
+  margin-top: 1%;
+}
+
+.gridLogin {
+  position: relative;
+  padding: 60px 80px;
+  width: 1000px;
+  border-radius: 16px;
+  background-color: #ffffff;
+  border: 1px solid #dbe0e4;
+  box-shadow: 0 4px 8px rgba(48, 92, 101, 0.2);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+  color: #eee;
+}
+
+
+.gridHeader {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.gridForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.gridRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.alert {
+  padding: 10px;
+  background-color: #ffdddd;
+  color: #a00;
+  border-radius: 8px;
+}
+
+.gridFooter {
+  margin-top: 20px;
+  text-align: center;
+  opacity: 0.8;
+
+}

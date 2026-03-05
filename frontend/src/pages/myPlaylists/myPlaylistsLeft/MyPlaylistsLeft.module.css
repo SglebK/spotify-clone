@@ -1,0 +1,70 @@
+/* src/pages/myPlaylists/myPlaylistsLeft/MyPlaylistsLeft.module.css */
+
+.left {
+    background: var(--button-bg);
+    border: 1px solid var(--button-border);
+    border-radius: 14px;
+    padding: 20px;
+    overflow-y: auto;
+    box-shadow: 0 4px 10px var(--button-shadow);
+    transition: background 0.3s, border 0.3s, box-shadow 0.3s;
+}
+
+/* Заголовок */
+.title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 18px;
+    color: var(--text);
+}
+
+/* Список */
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Один элемент */
+.item {
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--text);
+    transition: background 0.25s, transform 0.15s;
+}
+
+/* Hover */
+.item:hover {
+    background: var(--hover-bg);
+    transform: translateX(4px);
+}
+
+/* Активный плейлист */
+.active {
+    background: rgba(255, 255, 255, 0.15);
+    font-weight: 600;
+    border-left: 3px solid var(--text);
+    padding-left: 11px; /* компенсируем border */
+}
+
+/* Пустой список */
+.empty {
+    opacity: 0.6;
+    font-size: 14px;
+    padding: 10px;
+}
+
+/* Скроллбар */
+.left::-webkit-scrollbar {
+    width: 8px;
+}
+
+.left::-webkit-scrollbar-thumb {
+    background: var(--button-border);
+    border-radius: 4px;
+}
+
+.left::-webkit-scrollbar-thumb:hover {
+    background: var(--text);
+}

@@ -1,0 +1,75 @@
+/*src/layout/2aside/Aside.module.css*/
+/* Ссылки */
+
+
+ul {
+  list-style: none;
+}
+
+/* Контейнер */
+.grid2 {
+  display: grid;
+  grid-template-rows: 60px 40px 40px 10px 40px 10px 40px 40px 40px;
+  grid-template-areas:
+    'grid21'
+    'grid22'
+    'grid23'
+    'divider1'
+    'grid24'
+    'divider2'
+    'grid25'
+    'grid26'
+    'grid27';
+  padding: 20px;
+  row-gap: 10px;
+  height: 100%;
+  /*border: 1px solid rgb(245, 6, 26);*/
+}
+
+.grid21 {
+  grid-area: grid21;
+}
+.grid22 {
+  grid-area: grid22;
+}
+.grid23 {
+  grid-area: grid23;
+}
+.grid24 {
+  grid-area: grid24;
+}
+.grid25 {
+  grid-area: grid25;
+}
+.grid26 {
+  grid-area: grid26;
+}
+.grid27 {
+  grid-area: grid27;
+}
+.grid21,
+.grid22,
+.grid23,
+.grid24,
+.grid25,
+.grid26,
+.grid27{
+  font-size: 14px;
+}
+
+/* Разделитель */
+.divider1 {
+  grid-area: divider1;
+}
+.divider2 {
+  grid-area: divider2;
+}
+
+.divider1,
+.divider2 {
+  height: 1px;
+  width: 80%;
+  margin: 14px auto;
+  background: linear-gradient(to right, #d1c1d8, #e0e0e0, #d1c1d8);
+  border-radius: 1px;
+}

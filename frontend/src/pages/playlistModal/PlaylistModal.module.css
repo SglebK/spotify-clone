@@ -1,0 +1,141 @@
+/* src/pages/playlistModal/PlaylistModal.module.css */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(25, 25, 25, 0.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal {
+    width: 380px;
+    max-height: 70vh;
+    border-radius: 14px;
+    padding: 20px;
+    overflow-y: auto;
+
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    animation: fadeIn 0.25s ease;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.closeBtn {
+    background: none;
+    border: none;
+    font-size: 26px;
+    cursor: pointer;
+    color: var(--text);
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.closeBtn:hover {
+    opacity: 1;
+}
+
+/* ⭐ МАЛЕНЬКИЕ КНОПКИ */
+.smallButton {
+    width: auto;
+    padding: 6px 12px;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* ⭐ Кнопка очистки (для нового плейлиста) */
+.deleteBtn {
+    background: #d9534f !important;
+    color: white !important;
+    border: none !important;
+}
+
+.deleteBtn:hover {
+    background: #c9302c !important;
+}
+
+/* ⭐ Модалка ввода названия */
+.nameModal {
+    background: var(--bg);
+    border: 1px solid var(--input-border);
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.nameInput {
+    width: 100%;
+    margin-top: 8px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+}
+
+/* ⭐ Кнопки ОК / Отмена */
+.nameButtons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* ⭐ Блок "Сейчас играет" */
+.nowPlayingBlock {
+    margin-bottom: 20px;
+}
+
+.nowPlayingLabel {
+    font-size: 14px;
+    opacity: 0.7;
+    margin-bottom: 6px;
+}
+
+/* ⭐ Элемент списка */
+.item {
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+    background: transparent;
+}
+
+.item:hover {
+    background: rgba(0,0,0,0.07);
+}
+
+[data-theme="dark"] .item:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+/* ⭐ Активный трек */
+.active {
+    background: var(--progress-bg);
+    color: white;
+}
+
+/* ⭐ Текст */
+.title {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.artist {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

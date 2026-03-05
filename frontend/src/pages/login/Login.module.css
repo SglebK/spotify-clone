@@ -1,0 +1,63 @@
+.loginContainer {
+    position: relative;
+    padding: 100px;
+    border-radius: 16px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    min-height: 200px;
+    width: 1000px;
+    margin-left: 15%;
+    margin-top: 3%;
+}
+
+/* Светлая тема */
+.loginContainer.light {
+    background-color: #ffffff;
+    border: 1px solid #dbe0e4;
+    box-shadow: 0 4px 8px rgba(48, 92, 101, 0.2);
+}
+
+/* Тёмная тема */
+.loginContainer.dark {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+/* Заголовок */
+.loginContainer h2 {
+    margin-bottom: 20px;
+}
+
+/* Форма */
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Строка */
+.row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Размер кнопок */
+.buttonSize {
+    width: 800px;
+}
+
+/* Ошибка */
+.alert {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #ffdddd;
+    color: #a00;
+    border-radius: 8px;
+}
+
+/* Подвал */
+.footer {
+    margin-top: 20px;
+    opacity: 0.8;
+}

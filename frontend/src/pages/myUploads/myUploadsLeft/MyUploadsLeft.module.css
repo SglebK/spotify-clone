@@ -1,0 +1,85 @@
+/*src/pages/myUploads/myUploadsLeft/MyUploadsLeft.module.css*/
+/* Левая панель — список загруженных треков */
+.left {
+    background: var(--button-bg);
+    border: 1px solid var(--button-border);
+    border-radius: 14px;
+    padding: 20px;
+    overflow-y: auto;
+    box-shadow: 0 4px 10px var(--button-shadow);
+    transition: background 0.3s, border 0.3s, box-shadow 0.3s;
+}
+
+/* Заголовок */
+.title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 18px;
+    color: var(--text);
+    text-align: center;
+}
+
+/* Инфо‑текст (загрузка / пусто) */
+.info {
+    opacity: 0.6;
+    font-size: 14px;
+    padding: 10px;
+    text-align: center;
+}
+
+/* Список треков */
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Один трек */
+.item {
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--text);
+    transition: background 0.25s, transform 0.15s;
+    display: grid;
+    gap: 4px;
+}
+
+/* Hover */
+.item:hover {
+    background: var(--hover-bg);
+    transform: translateX(4px);
+}
+
+/* Активный трек */
+.active {
+    background: rgba(255, 255, 255, 0.15);
+    font-weight: 600;
+    border-left: 3px solid var(--text);
+    padding-left: 11px;
+}
+
+/* Название и артист */
+.trackTitle {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.trackArtist {
+    font-size: 13px;
+    opacity: 0.7;
+}
+
+/* Скроллбар */
+.left::-webkit-scrollbar {
+    width: 8px;
+}
+
+.left::-webkit-scrollbar-thumb {
+    background: var(--button-border);
+    border-radius: 4px;
+}
+
+.left::-webkit-scrollbar-thumb:hover {
+    background: var(--text);
+}

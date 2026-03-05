@@ -1,0 +1,118 @@
+.grid1 {
+    display: grid;
+    grid-template-columns: 150px auto 300px 450px;
+    grid-template-areas: 
+        'grid11 grid12 grid13 grid14';
+    height: 100%;
+}
+
+.grid11 {
+    grid-area: grid11;
+    display: grid;
+    grid-template-columns: 75px 75px;
+    grid-template-areas: 
+        'grid111 grid112';
+    height: 100%;
+    text-align: center;
+   /* border: 1px solid rgb(245, 6, 26);*/
+}
+.grid111{
+    grid-area: grid111;
+    padding-top: 8px;
+    padding-left: 20px;
+   /* border: 1px solid rgb(245, 6, 26);*/
+}
+.grid112{
+    grid-area: grid112;
+    text-align: center;
+    padding-top: 8px;
+    /* border: 1px solid rgb(245, 6, 26);*/
+}
+
+.grid12 {
+    grid-area: grid12;
+    display: grid;
+    grid-template-columns: 480px 75px;
+    grid-template-areas: 
+        'grid121 grid122';
+    /* border: 1px solid rgb(245, 6, 26);*/
+}
+.grid121{
+    grid-area: grid121;
+    padding-top: 1px;
+    padding-left: 20px;
+   /* border: 1px solid rgb(245, 6, 26);*/
+}
+.grid122{
+    grid-area: grid122;
+    text-align: center;
+    padding-top: 8px;
+    /* border: 1px solid rgb(245, 6, 26);*/
+}
+
+.grid13 {
+    grid-area: grid13;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    /* border: 1px solid rgb(245, 6, 26);*/
+}
+
+.grid14 {
+    grid-area: grid14;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    /* border: 1px solid rgb(245, 6, 26);*/
+}
+
+.Icon {
+    width: 52px;
+    height: 52px;
+}
+
+/* Уникальный стиль заголовка только для Header */
+.grid12 h1 {
+ 
+    font-size: 38px;
+    font-weight: 400;
+    letter-spacing: 1px;
+    transform: skewX(-3deg);
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.25);
+}
+
+/* Локальный размер кнопки */
+.buttonSize {
+    padding: 6px 14px;
+    font-size: 14px;
+    width: 250px;
+}
+
+/* Email пользователя */
+.email {
+    font-weight: 400;
+    font-size: 20px;
+    font-weight: 500;
+    margin-right: 10px;
+    margin-left: 10px;
+}
+
+.searchInput {
+  width: 460px;
+  margin-top: 8px;
+  height: 52px;
+  border-radius: 30px;
+  color: rgb(224, 222, 222);
+  border: 1px solid grey;
+  position: relative
+}
+
+.logButton {
+  width: 200px; 
+}
+
+
+
+

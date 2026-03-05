@@ -1,0 +1,39 @@
+/*src/App.module.css*/
+.grid{
+    display: grid;
+    grid-template-columns: 200px auto; /*по горизонтали*/
+    grid-template-rows: 60px auto 100px;   /*по вертикали*/
+    grid-template-areas: 
+    'grid1 grid1'
+    'grid2 grid3'
+    'grid4 grid4';
+    /*border: 1px solid rgb(33, 163, 206); */ 
+    height: 100vh;
+    overflow: hidden;
+}
+.grid1 {
+    grid-area: grid1;
+    /*border: 1px solid rgb(33, 163, 206); */
+}
+.grid2 {
+    grid-area: grid2;
+    /*border: 1px solid rgb(33, 163, 206); */
+}
+.grid3 {
+    grid-area: grid3;
+    /*border: 1px solid rgb(33, 163, 206); */ 
+}
+.grid4 {
+    grid-area: grid4;
+    /*border: 1px solid rgb(33, 163, 206); */ 
+}
+ 
+.light {
+  background-color: #ffffff;
+  color: #18537d;
+}
+
+.dark {
+  background-color: #1e1e1e;
+  color: #e5e5e5;
+}

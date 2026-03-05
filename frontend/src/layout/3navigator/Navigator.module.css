@@ -1,0 +1,21 @@
+.grid3 {
+    transition: background-color 0.3s ease, color 0.3s ease;
+    width: 100%; 
+    height: 100%; 
+    overflow: auto;
+}
+
+/* Ссылки */
+.link {
+    color: inherit;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+
+
+

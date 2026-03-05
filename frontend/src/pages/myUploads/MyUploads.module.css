@@ -1,0 +1,38 @@
+/*src/pages/myUploads/MyUploads.module.css*/
+/* -----------------------------------------
+   ОБЩИЙ КОНТЕЙНЕР СТРАНИЦЫ
+----------------------------------------- */
+.grid3 {
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px;
+    box-sizing: border-box;
+    transition: background 0.3s, color 0.3s;
+}
+
+/* -----------------------------------------
+   ДВЕ КОЛОНКИ
+----------------------------------------- */
+.grid31 {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+}
+
+/* Адаптивность */
+@media (max-width: 900px) {
+    .grid31 {
+        grid-template-columns: 1fr;
+    }
+
+    .grid311 {
+        max-height: 260px;
+    }
+}

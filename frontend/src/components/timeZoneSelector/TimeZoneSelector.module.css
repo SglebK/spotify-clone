@@ -1,0 +1,33 @@
+.timeZoneSelector {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #cddee3;
+  background-color: #f8fafa;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  color: #18537d; /* текст в светлой теме */
+  outline: none;
+}
+
+.timeZoneSelector option {
+  background-color: #f8fafa;
+  color: #18537d;
+}
+
+/* Тёмная тема */
+:global(.dark) .timeZoneSelector {
+  background-color: #2a2a2a;
+  border: 1px solid #c1bcbc;
+  color: #eee; /* текст в select */
+}
+
+:global(.dark) .timeZoneSelector option {
+  background-color: #2a2a2a;
+  color: #eee; /* текст в option */
+}
+
+/* Убираем чёрный outline */
+.timeZoneSelector:focus {
+  outline: none;
+  border-color: #8aa8b0; /* мягкий акцент */
+}

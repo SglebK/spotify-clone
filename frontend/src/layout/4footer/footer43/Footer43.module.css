@@ -1,0 +1,85 @@
+/* src/layout/4footer/footer43/Footer43.module.css */
+
+.right {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+/* Иконка громкости */
+.icon {
+  font-size: 22px;
+  color: var(--text);
+  opacity: 0.9;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Слайдер громкости */
+.slider {
+  width: 200px;
+  height: 6px;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background: var(--progress-fill); /* как у прогресс-бара */
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Chrome / Safari */
+.slider::-webkit-slider-runnable-track {
+  height: 6px;
+  background: var(--progress-fill);
+  border-radius: 4px;
+}
+
+/* Ползунок — уменьшенный и центрированный */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+
+  width: 12px;   /* уменьшенный размер */
+  height: 12px;
+  background: var(--progress-bg); /* как кружок прогресс-бара */
+  border-radius: 50%;
+  cursor: pointer;
+
+  /* ⭐ идеальное центрирование */
+  margin-top: -3px;
+
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+}
+
+/* Firefox */
+.slider::-moz-range-track {
+  height: 6px;
+  background: var(--progress-fill);
+  border-radius: 4px;
+}
+
+.slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: var(--progress-bg);
+  border-radius: 50%;
+  cursor: pointer;
+
+  /* ⭐ идеальное центрирование */
+  margin-top: -3px;
+
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+.slider::-moz-range-thumb:hover {
+  transform: scale(1.25);
+}

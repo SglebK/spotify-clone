@@ -1,0 +1,86 @@
+/* src/pages/myPlaylists/MyPlaylists.module.css */
+
+/* -----------------------------------------
+   ОБЩИЙ КОНТЕЙНЕР СТРАНИЦЫ
+----------------------------------------- */
+.grid3 {
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px;
+    box-sizing: border-box;
+    transition: background 0.3s, color 0.3s;
+}
+
+/* -----------------------------------------
+   ДВЕ КОЛОНКИ
+----------------------------------------- */
+.grid31 {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+}
+
+/* -----------------------------------------
+   ЛЕВАЯ ПАНЕЛЬ — СПИСОК ПЛЕЙЛИСТОВ
+----------------------------------------- */
+.grid311 {
+    background: var(--button-bg);
+    border: 1px solid var(--button-border);
+    border-radius: 14px;
+    padding: 20px;
+    overflow-y: auto;
+    box-shadow: 0 4px 10px var(--button-shadow);
+    transition: background 0.3s, border 0.3s, box-shadow 0.3s;
+}
+
+/* -----------------------------------------
+   ПРАВАЯ ПАНЕЛЬ — СОДЕРЖИМОЕ ПЛЕЙЛИСТА
+----------------------------------------- */
+.grid312 {
+    background: var(--bg);
+    border: 1px solid var(--button-border);
+    border-radius: 14px;
+    padding: 30px;
+    overflow-y: auto;
+    box-shadow: 0 4px 10px var(--button-shadow);
+    transition: background 0.3s, border 0.3s, box-shadow 0.3s;
+}
+
+/* -----------------------------------------
+   СКРОЛЛБАР — АККУРАТНЫЙ
+----------------------------------------- */
+.grid311::-webkit-scrollbar,
+.grid312::-webkit-scrollbar {
+    width: 8px;
+}
+
+.grid311::-webkit-scrollbar-thumb,
+.grid312::-webkit-scrollbar-thumb {
+    background: var(--button-border);
+    border-radius: 4px;
+}
+
+.grid311::-webkit-scrollbar-thumb:hover,
+.grid312::-webkit-scrollbar-thumb:hover {
+    background: var(--text);
+}
+
+/* -----------------------------------------
+   АДАПТИВНОСТЬ
+----------------------------------------- */
+@media (max-width: 900px) {
+    .grid31 {
+        grid-template-columns: 1fr;
+    }
+
+    .grid311 {
+        max-height: 260px;
+    }
+}
