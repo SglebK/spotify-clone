@@ -5,7 +5,7 @@ import styles from "./MyUploadsRight.module.css";
 import { fixUrl } from "../../../components/utils/fixUrl/fixUrl";
 import { useMyUploadsRightLogic } from "./MyUploadsRightFunction";
 
-function MyUploadsRight({ track, onPlayTrack, setTracks }) {
+function MyUploadsRight({ track, onPlayTrack, setTracks, setMyTracks, setSelectedTrack }) {
     // always call hook to satisfy rules of hooks
     const {
         isPublic,
@@ -13,7 +13,7 @@ function MyUploadsRight({ track, onPlayTrack, setTracks }) {
         deleteTrack,
         togglePublic,
         addToPlaylist
-    } = useMyUploadsRightLogic(track, onPlayTrack, setTracks);
+    } = useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTracks, setSelectedTrack);
 
     if (!track) {
         return (

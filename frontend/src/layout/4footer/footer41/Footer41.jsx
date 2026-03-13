@@ -2,6 +2,7 @@
 
 import React from 'react';
 import styles from './Footer41.module.css';
+import { fixUrl } from '../../../components/utils/fixUrl/fixUrl';
 
 function Footer41({ track }) {
 
@@ -13,7 +14,7 @@ function Footer41({ track }) {
                 <div className={styles.grid4111}>
                     {track ? (
                         <img
-                            src={track.coverUrl || "/default-cover.png"}
+                            src={fixUrl(track.coverUrl) || "/default-cover.png"}
                             alt={track.title}
                             className={styles.cover}
                         />

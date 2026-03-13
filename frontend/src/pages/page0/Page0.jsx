@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import styles from "./Page0.module.css";
 import Toast from "../../components/toast/Toast.jsx";
 import { API_URL } from "../../components/utils/api/config";
+import { fixUrl } from "../../components/utils/fixUrl/fixUrl";
 
 function Page0({ onSelectTrack, tracks, setTracks, setPlaylistName }) {
     const [serverTracks, setServerTracks] = useState([]);
@@ -10,13 +11,24 @@ function Page0({ onSelectTrack, tracks, setTracks, setPlaylistName }) {
 
     useEffect(() => {
         fetch(`${API_URL}/api/tracks`)
-            .then(res => res.json())
+            .then(async (res) => {
+                if (!res.ok) {
+                    throw new Error(`Ошибка загрузки: ${res.status}`);
+                }
+                return res.json();
+            })
             .then(data => setServerTracks(data))
             .catch(err => console.error("Ошибка загрузки треков:", err));
     }, []);
 
     const addToPlaylist = (track) => {
-        const exists = tracks.some(t => t.id === track.id);
+        const preparedTrack = {
+            ...track,
+            audioUrl: fixUrl(track.audioUrl),
+            coverUrl: fixUrl(track.coverUrl)
+        };
+
+        const exists = tracks.some(t => t.id === preparedTrack.id);
 
         if (exists) {
             setToast("Трек уже в плейлисте");
@@ -27,11 +39,9 @@ function Page0({ onSelectTrack, tracks, setTracks, setPlaylistName }) {
         // ⭐ Сбрасываем название — это новый временный плейлист
         setPlaylistName(null);
 
-        // ⭐ Добавляем трек в плейлист
-        setTracks(prev => [...prev, track]);
+        setTracks(prev => [...prev, preparedTrack]);
 
-        // ⭐ Делаем трек текущим
-        onSelectTrack(track);
+        onSelectTrack(preparedTrack);
 
         setToast("Добавлено в плейлист");
         setTimeout(() => setToast(null), 2000);
@@ -57,10 +67,16 @@ function Page0({ onSelectTrack, tracks, setTracks, setPlaylistName }) {
                         </button>
 
                         <img 
-                            src={track.coverUrl || "/default-cover.png"} 
+                            src={fixUrl(track.coverUrl) || "/default-cover.png"} 
                             alt={track.title} 
                             className={styles.cover}
-                            onClick={() => onSelectTrack(track)}
+                            onClick={() =>
+                                onSelectTrack({
+                                    ...track,
+                                    audioUrl: fixUrl(track.audioUrl),
+                                    coverUrl: fixUrl(track.coverUrl)
+                                })
+                            }
                         />
 
                         <p className={styles.trackTitle}>{track.title}</p>

@@ -1,6 +1,6 @@
 // src/components/progressBar/ProgressBar.jsx
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./ProgressBar.module.css";
 
 export default function ProgressBar({ audioRef }) {
@@ -66,7 +66,7 @@ export default function ProgressBar({ audioRef }) {
     };
 
     // ⭐ Завершение перетаскивания
-    const handleMouseUp = () => {
+    const handleMouseUp = useCallback(() => {
         if (!isDragging) return;
         setIsDragging(false);
 
@@ -75,7 +75,7 @@ export default function ProgressBar({ audioRef }) {
             audioRef.current.currentTime = (dragProgress / 100) * duration;
             audioRef.current.play();
         }
-    };
+    }, [audioRef, dragProgress, isDragging]);
 
     // ⭐ Слушаем движение мыши
     useEffect(() => {
@@ -89,7 +89,7 @@ export default function ProgressBar({ audioRef }) {
             window.removeEventListener("mousemove", move);
             window.removeEventListener("mouseup", up);
         };
-    }, [isDragging, dragProgress]);
+    }, [isDragging, dragProgress, handleMouseUp]);
 
     const progress = isDragging ? dragProgress : smoothProgress;
 

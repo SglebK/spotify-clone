@@ -1,4 +1,5 @@
-//src/components/utils/fixUrl/fixUrl.js
+import { API_URL } from "../api/config";
+
 export function fixUrl(url) {
     if (!url) return null;
 
@@ -7,7 +8,5 @@ export function fixUrl(url) {
         return url;
     }
 
-    // Иначе добавляем домен backend (возможно из env)
-    const base = import.meta.env.VITE_API_URL || "http://localhost:5000";
-    return `${base}${url}`;
+    return `${API_URL}${url}`;
 }

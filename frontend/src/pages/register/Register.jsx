@@ -5,10 +5,12 @@ import TimeZoneSelector from '../../components/timeZoneSelector/TimeZoneSelector
 import { API_URL } from "../../components/utils/api/config";
 import styles from './Register.module.css';
 import { useError } from '../../context/error/ErrorContext.jsx';
+import { useAuth } from '../../context/auth/AuthContext.jsx';
 
 function Register({ theme }) {
   const navigate = useNavigate();
   const { showError } = useError();
+  const { login } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [emailInput, setEmailInput] = useState('');
@@ -48,7 +50,8 @@ function Register({ theme }) {
         return;
       }
 
-      navigate("/login");
+      await login(emailInput, password);
+      navigate("/");
     } catch {
       showError("Ошибка сети");
     } finally {
@@ -113,7 +116,7 @@ function Register({ theme }) {
         </form>
 
         <p className={styles.gridFooter}>
-          После регистрации вы будете авторизованы автоматически.
+          После регистрации вход выполнится автоматически.
         </p>
       </div>
     </div>

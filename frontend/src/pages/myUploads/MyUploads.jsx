@@ -68,7 +68,9 @@ function MyUploads({ onPlayTrack, setTracks }) {
                 <MyUploadsRight
                     track={selectedTrack}
                     onPlayTrack={handlePlayTrack}
-                    setTracks={setTracks}   // ← плейлист футера
+                    setTracks={setTracks}
+                    setMyTracks={setMyTracks}
+                    setSelectedTrack={setSelectedTrack}
                 />
             </div>
         </div>

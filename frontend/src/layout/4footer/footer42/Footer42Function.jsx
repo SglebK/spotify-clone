@@ -20,12 +20,6 @@ export function useFooter42Logic(track, volume, onNextTrack, hasNextTrack) {
         });
     };
 
-    // ⭐ Лог для диагностики
-    useEffect(() => {
-        console.log("TRACK FROM FOOTER:", track);
-        console.log("AUDIO URL:", track?.audioUrl);
-    }, [track]);
-
     // ⭐ При смене трека — обновляем src и запускаем воспроизведение
     useEffect(() => {
         const audio = audioRef.current;
@@ -44,7 +38,7 @@ export function useFooter42Logic(track, volume, onNextTrack, hasNextTrack) {
         audio.play().catch(() => {});
         setIsPlaying(true);
 
-    }, [track]);
+    }, [track, volume, speed]);
 
     // ⭐ Подписка на события аудио
     useEffect(() => {

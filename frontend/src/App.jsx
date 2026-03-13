@@ -68,9 +68,8 @@ function App() {
             setTrack={setCurrentTrack}
             tracks={tracks}
             setTracks={setTracks}
-
-            // ⭐ Передаём название плейлиста в модалку
             playlistName={playlistName}
+            setPlaylistName={setPlaylistName}
             refreshPlaylists={() => {}}
           />
         </div>

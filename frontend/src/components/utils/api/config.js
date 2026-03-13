@@ -1,11 +1,8 @@
-// src/components/utils/api/config.js
+const envUrl = import.meta.env.VITE_API_URL?.trim();
+const host = window.location.hostname;
+const isLocalHost =
+  host === "localhost" || host === "127.0.0.1" || host === "::1";
 
-let autoUrl = "";
+const autoUrl = isLocalHost ? "http://localhost:5000" : window.location.origin;
 
-if (window.location.hostname === "localhost") {
-  autoUrl = "http://localhost:5000";
-} else {
-  autoUrl = "https://your-production-domain.com";
-}
-
-export const API_URL = import.meta.env.VITE_API_URL || autoUrl;
+export const API_URL = (envUrl || autoUrl).replace(/\/+$/, "");

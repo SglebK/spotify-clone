@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -9,6 +10,11 @@ const { PrismaClient } = require('@prisma/client');
 
 const app = express();
 const prisma = new PrismaClient();
+
+const uploadsRoot = path.join(__dirname, '../uploads');
+['audio', 'covers', 'other'].forEach((dir) => {
+  fs.mkdirSync(path.join(uploadsRoot, dir), { recursive: true });
+});
 
 // middleware
 app.use(cors());
@@ -53,6 +59,11 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage });
+
+// ------------------------------------------------------------------
+app.get('/api/status/ping', (req, res) => {
+  res.json({ ok: true });
+});
 
 // ------------------------------------------------------------------
 // auth routes
@@ -126,16 +137,20 @@ app.get('/api/auth/me', authenticate, (req, res) => {
 // ------------------------------------------------------------------
 // tracks
 app.get('/api/tracks', async (req, res) => {
-  // return only "seeded" or public tracks (tracks not uploaded by a specific user)
   const tracks = await prisma.track.findMany({
-    where: { deletedAt: null, userId: null }
+    where: {
+      deletedAt: null,
+      OR: [{ userId: null }, { isPublic: true }]
+    },
+    orderBy: { createdAt: 'desc' }
   });
   res.json(tracks);
 });
 
 app.get('/api/tracks/my', authenticate, async (req, res) => {
   const tracks = await prisma.track.findMany({
-    where: { userId: req.user.id, deletedAt: null }
+    where: { userId: req.user.id, deletedAt: null },
+    orderBy: { createdAt: 'desc' }
   });
   res.json(tracks);
 });
@@ -155,6 +170,7 @@ app.post('/api/tracks/upload', authenticate, upload.fields([{ name: 'audio' }, {
           artist,
           audioUrl: audioPath,
           coverUrl: coverPath,
+          isPublic: false,
           userId: req.user.id
         }
       });
@@ -165,6 +181,62 @@ app.post('/api/tracks/upload', authenticate, upload.fields([{ name: 'audio' }, {
     }
   }
 );
+
+app.put('/api/tracks/:id', authenticate, async (req, res) => {
+  const { id } = req.params;
+  const { title, artist, isPublic } = req.body;
+  const data = {};
+
+  if (typeof title === 'string' && title.trim()) data.title = title.trim();
+  if (typeof artist === 'string' && artist.trim()) data.artist = artist.trim();
+  if (typeof isPublic === 'boolean') data.isPublic = isPublic;
+
+  if (Object.keys(data).length === 0) {
+    return res.status(400).json({ error: 'Nothing to update' });
+  }
+
+  try {
+    const updated = await prisma.track.updateMany({
+      where: { id, userId: req.user.id, deletedAt: null },
+      data
+    });
+
+    if (updated.count === 0) {
+      return res.status(404).json({ error: 'Track not found' });
+    }
+
+    const track = await prisma.track.findUnique({ where: { id } });
+    res.json(track);
+  } catch (err) {
+    console.error('update track error', err);
+    res.status(500).json({ error: 'Unable to update track' });
+  }
+});
+
+app.delete('/api/tracks/:id', authenticate, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const existing = await prisma.track.findFirst({
+      where: { id, userId: req.user.id, deletedAt: null }
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Track not found' });
+    }
+
+    await prisma.playlistTrack.deleteMany({ where: { trackId: id } });
+    await prisma.track.update({
+      where: { id },
+      data: { deletedAt: new Date() }
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('delete track error', err);
+    res.status(500).json({ error: 'Unable to delete track' });
+  }
+});
 
 // ------------------------------------------------------------------
 // playlists
