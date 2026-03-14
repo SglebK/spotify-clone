@@ -69,6 +69,10 @@ export function useFooter42Logic(track, volume, onNextTrack, hasNextTrack) {
             }
         };
 
+        const handlePlay = () => setIsPlaying(true);
+        const handlePause = () => setIsPlaying(false);
+        const handleEmptied = () => setIsPlaying(false);
+
         const handleEnded = () => {
             if (repeatMode === "one") {
                 audio.currentTime = 0;
@@ -89,11 +93,17 @@ export function useFooter42Logic(track, volume, onNextTrack, hasNextTrack) {
 
         audio.addEventListener("timeupdate", updateTime);
         audio.addEventListener("loadedmetadata", updateDuration);
+        audio.addEventListener("play", handlePlay);
+        audio.addEventListener("pause", handlePause);
+        audio.addEventListener("emptied", handleEmptied);
         audio.addEventListener("ended", handleEnded);
 
         return () => {
             audio.removeEventListener("timeupdate", updateTime);
             audio.removeEventListener("loadedmetadata", updateDuration);
+            audio.removeEventListener("play", handlePlay);
+            audio.removeEventListener("pause", handlePause);
+            audio.removeEventListener("emptied", handleEmptied);
             audio.removeEventListener("ended", handleEnded);
         };
     }, [repeatMode, onNextTrack, hasNextTrack]);

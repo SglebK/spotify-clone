@@ -2,6 +2,16 @@
 
 Экзаменационный проект с фронтендом на React + Vite и бэкендом на Node.js + Express + Prisma + SQLite.
 
+## Стек технологий
+
+- Frontend: `React 19`, `Vite`, `React Router`, `Axios`, `CSS Modules`
+- Backend: `Node.js`, `Express`
+- База данных: `SQLite`
+- ORM: `Prisma`
+- Аутентификация: `JWT access token + refresh token`
+- Работа с файлами: `Multer`
+- Хеширование паролей: `bcrypt`
+
 ## Структура
 
 - `frontend` - клиентская часть

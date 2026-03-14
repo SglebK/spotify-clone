@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { API_URL } from "../../../components/utils/api/config";
+import { fixUrl } from "../../../components/utils/fixUrl/fixUrl";
 import { useAuth } from "../../../context/auth/AuthContext";
 
 export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTracks, setSelectedTrack) {
@@ -113,8 +114,7 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
             .catch((err) => console.error("Ошибка смены публичности:", err));
     }, [track, isPublic, accessToken, setMyTracks, setSelectedTrack]);
 
-    // ⭐ Добавить в "Любимые треки"
-    const addToPlaylist = useCallback(() => {
+    const addToFavorites = useCallback(() => {
         if (!track) return;
 
         fetch(`${API_URL}/api/playlists/favorites/tracks`, {
@@ -145,12 +145,48 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
             });
     }, [track, accessToken]);
 
+    // ⭐ Добавить в текущий плейлист плеера
+    const addToPlaylist = useCallback(() => {
+        if (!track) return;
+
+        const preparedTrack = {
+            ...track,
+            audioUrl: fixUrl(track.audioUrl),
+            coverUrl: fixUrl(track.coverUrl)
+        };
+
+        let wasAdded = false;
+        let shouldStartPlayback = false;
+
+        setTracks((prev) => {
+            if (prev.some((item) => item.id === preparedTrack.id)) {
+                return prev;
+            }
+
+            wasAdded = true;
+            shouldStartPlayback = prev.length === 0;
+            return [...prev, preparedTrack];
+        });
+
+        if (!wasAdded) {
+            setPlaylistMessage("Трек уже есть в текущем плейлисте");
+            return;
+        }
+
+        if (shouldStartPlayback && onPlayTrack) {
+            onPlayTrack(preparedTrack);
+        }
+
+        setPlaylistMessage("Трек добавлен в текущий плейлист");
+    }, [track, setTracks, onPlayTrack]);
+
     return {
         isPublic,
         playlistMessage,
         editTrack,
         deleteTrack,
         togglePublic,
-        addToPlaylist
+        addToPlaylist,
+        addToFavorites
     };
 }

@@ -13,7 +13,8 @@ function MyUploadsRight({ track, onPlayTrack, setTracks, setMyTracks, setSelecte
         editTrack,
         deleteTrack,
         togglePublic,
-        addToPlaylist
+        addToPlaylist,
+        addToFavorites
     } = useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTracks, setSelectedTrack);
 
     if (!track) {
@@ -50,6 +51,13 @@ function MyUploadsRight({ track, onPlayTrack, setTracks, setMyTracks, setSelecte
                 <button
                     className={`button ${styles.buttonFix}`}
                     onClick={addToPlaylist}
+                >
+                    Добавить в плейлист
+                </button>
+
+                <button
+                    className={`button ${styles.buttonFix}`}
+                    onClick={addToFavorites}
                 >
                     В любимые
                 </button>
