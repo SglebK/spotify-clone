@@ -9,6 +9,8 @@ function PlaylistModal({
     onSelect,
     onClose,
     onSavePlaylist,
+    existingPlaylists = [],
+    onAddToExisting,
     playlistNameInitial,
     onClearTempPlaylist
 }) {
@@ -31,6 +33,10 @@ function PlaylistModal({
         setIsNaming(false);
         onClose();
     };
+
+    const availablePlaylists = existingPlaylists.filter(
+        (playlist) => !playlistNameInitial || playlist.title !== playlistNameInitial
+    );
 
     return (
         <div className={styles.overlay} onClick={onClose}>
@@ -89,6 +95,25 @@ function PlaylistModal({
                             >
                                 Отмена
                             </button>
+                        </div>
+                    </div>
+                )}
+
+                {!isNaming && availablePlaylists.length > 0 && (
+                    <div className={styles.existingBlock}>
+                        <p className={styles.sectionLabel}>Добавить в существующий плейлист</p>
+
+                        <div className={styles.existingList}>
+                            {availablePlaylists.map((playlist) => (
+                                <button
+                                    key={playlist.id}
+                                    type="button"
+                                    className={styles.existingItem}
+                                    onClick={() => onAddToExisting?.(playlist.id, tracks)}
+                                >
+                                    {playlist.title}
+                                </button>
+                            ))}
                         </div>
                     </div>
                 )}

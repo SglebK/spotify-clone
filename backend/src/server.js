@@ -431,8 +431,59 @@ app.post('/api/playlist-tracks', authenticate, async (req, res) => {
     if (!playlist || playlist.userId !== req.user.id) {
       return res.status(403).json({ error: 'Playlist not found or access denied' });
     }
-    const pt = await prisma.playlistTrack.create({ data: { playlistId, trackId, order } });
-    res.json(pt);
+
+    const track = await prisma.track.findFirst({
+      where: {
+        id: trackId,
+        deletedAt: null,
+        OR: [{ userId: null }, { userId: req.user.id }, { isPublic: true }]
+      }
+    });
+
+    if (!track) {
+      return res.status(404).json({ error: 'Track not found' });
+    }
+
+    const existing = await prisma.playlistTrack.findUnique({
+      where: {
+        playlistId_trackId: {
+          playlistId,
+          trackId
+        }
+      }
+    });
+
+    if (existing && !existing.deletedAt) {
+      return res.json({ success: true, added: false, duplicate: true, playlistId, trackId });
+    }
+
+    const maxOrder = await prisma.playlistTrack.aggregate({
+      where: { playlistId, deletedAt: null },
+      _max: { order: true }
+    });
+
+    const nextOrder = Number.isInteger(order) ? order : (maxOrder._max.order ?? -1) + 1;
+
+    if (existing && existing.deletedAt) {
+      const restored = await prisma.playlistTrack.update({
+        where: {
+          playlistId_trackId: {
+            playlistId,
+            trackId
+          }
+        },
+        data: {
+          deletedAt: null,
+          restoredAt: new Date(),
+          order: nextOrder
+        }
+      });
+
+      return res.json({ success: true, added: true, restored: true, playlistTrack: restored });
+    }
+
+    const pt = await prisma.playlistTrack.create({ data: { playlistId, trackId, order: nextOrder } });
+    res.json({ success: true, added: true, playlistTrack: pt });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Could not add track to playlist' });

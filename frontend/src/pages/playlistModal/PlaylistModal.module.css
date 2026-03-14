@@ -90,6 +90,39 @@
     gap: 10px;
 }
 
+.existingBlock {
+    margin-bottom: 18px;
+    padding: 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 12px;
+}
+
+.sectionLabel {
+    margin: 0 0 10px;
+    font-size: 14px;
+    opacity: 0.75;
+}
+
+.existingList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.existingItem {
+    border: 1px solid var(--button-border);
+    background: var(--button-bg);
+    color: var(--button-text);
+    border-radius: 999px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font: inherit;
+}
+
+.existingItem:hover {
+    opacity: 0.92;
+}
+
 /* ⭐ Блок "Сейчас играет" */
 .nowPlayingBlock {
     margin-bottom: 20px;
