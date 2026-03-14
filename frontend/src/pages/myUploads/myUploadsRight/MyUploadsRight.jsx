@@ -9,6 +9,7 @@ function MyUploadsRight({ track, onPlayTrack, setTracks, setMyTracks, setSelecte
     // always call hook to satisfy rules of hooks
     const {
         isPublic,
+        playlistMessage,
         editTrack,
         deleteTrack,
         togglePublic,
@@ -50,7 +51,7 @@ function MyUploadsRight({ track, onPlayTrack, setTracks, setMyTracks, setSelecte
                     className={`button ${styles.buttonFix}`}
                     onClick={addToPlaylist}
                 >
-                    Добавить в плейлист
+                    В любимые
                 </button>
 
                 {/* ⭐ Прослушать — заменяет текущий трек */}
@@ -72,6 +73,9 @@ function MyUploadsRight({ track, onPlayTrack, setTracks, setMyTracks, setSelecte
             <div className={styles.grid322}>
                 <h2 className={styles.title}>{track.title}</h2>
                 <p className={styles.artist}>{track.artist}</p>
+                {playlistMessage && (
+                    <p className={styles.statusMessage}>{playlistMessage}</p>
+                )}
             </div>
 
             <div className={styles.grid323}>

@@ -86,6 +86,13 @@
     opacity: 0.7;
 }
 
+.statusMessage {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--text);
+    opacity: 0.85;
+}
+
 /* Обложка */
 .grid323 {
     display: flex;

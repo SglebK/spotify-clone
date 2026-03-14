@@ -10,6 +10,7 @@ const { PrismaClient } = require('@prisma/client');
 
 const app = express();
 const prisma = new PrismaClient();
+const FAVORITES_TITLE = 'Любимые треки';
 
 const uploadsRoot = path.join(__dirname, '../uploads');
 ['audio', 'covers', 'other'].forEach((dir) => {
@@ -242,7 +243,8 @@ app.delete('/api/tracks/:id', authenticate, async (req, res) => {
 // playlists
 app.get('/api/playlists/my', authenticate, async (req, res) => {
   const lists = await prisma.playlist.findMany({
-    where: { userId: req.user.id, deletedAt: null }
+    where: { userId: req.user.id, deletedAt: null },
+    orderBy: [{ isFavorites: 'desc' }, { createdAt: 'desc' }]
   });
   res.json(lists);
 });
@@ -252,7 +254,12 @@ app.post('/api/playlists', authenticate, async (req, res) => {
     const { title, description } = req.body;
     if (!title) return res.status(400).json({ error: 'title required' });
     const pl = await prisma.playlist.create({
-      data: { title, description: description || null, userId: req.user.id }
+      data: {
+        title,
+        description: description || null,
+        isFavorites: false,
+        userId: req.user.id
+      }
     });
     res.json(pl);
   } catch (err) {
@@ -265,7 +272,13 @@ app.get('/api/playlists/:id', authenticate, async (req, res) => {
   const { id } = req.params;
   const pl = await prisma.playlist.findUnique({
     where: { id },
-    include: { tracks: { include: { track: true } } }
+    include: {
+      tracks: {
+        where: { deletedAt: null },
+        orderBy: { order: 'asc' },
+        include: { track: true }
+      }
+    }
   });
   if (!pl || pl.userId !== req.user.id) return res.status(404).json({ error: 'Playlist not found' });
   // unwrap tracks
@@ -282,6 +295,18 @@ app.put('/api/playlists/:id', authenticate, async (req, res) => {
   if (input.IsPublic != null) update.isPublic = input.IsPublic;
   if (input.isPublic != null) update.isPublic = input.isPublic;
   try {
+    const playlist = await prisma.playlist.findFirst({
+      where: { id, userId: req.user.id, deletedAt: null }
+    });
+
+    if (!playlist) {
+      return res.status(404).json({ error: 'Playlist not found' });
+    }
+
+    if (playlist.isFavorites && update.title && update.title !== playlist.title) {
+      return res.status(400).json({ error: 'Favorites playlist cannot be renamed' });
+    }
+
     await prisma.playlist.updateMany({
       where: { id, userId: req.user.id },
       data: update
@@ -295,6 +320,18 @@ app.put('/api/playlists/:id', authenticate, async (req, res) => {
 app.delete('/api/playlists/:id', authenticate, async (req, res) => {
   const { id } = req.params;
   try {
+    const playlist = await prisma.playlist.findFirst({
+      where: { id, userId: req.user.id, deletedAt: null }
+    });
+
+    if (!playlist) {
+      return res.status(404).json({ error: 'Playlist not found' });
+    }
+
+    if (playlist.isFavorites) {
+      return res.status(400).json({ error: 'Favorites playlist cannot be deleted' });
+    }
+
     // remove any tracks linked to the playlist first to satisfy foreign keys
     await prisma.playlistTrack.deleteMany({ where: { playlistId: id } });
     await prisma.playlist.deleteMany({ where: { id, userId: req.user.id } });
@@ -302,6 +339,88 @@ app.delete('/api/playlists/:id', authenticate, async (req, res) => {
   } catch (err) {
     console.error('delete playlist error', err);
     res.status(500).json({ error: 'Unable to delete playlist' });
+  }
+});
+
+app.post('/api/playlists/favorites/tracks', authenticate, async (req, res) => {
+  const { trackId } = req.body;
+
+  if (!trackId) {
+    return res.status(400).json({ error: 'trackId required' });
+  }
+
+  try {
+    const track = await prisma.track.findFirst({
+      where: {
+        id: trackId,
+        deletedAt: null,
+        OR: [{ userId: null }, { userId: req.user.id }, { isPublic: true }]
+      }
+    });
+
+    if (!track) {
+      return res.status(404).json({ error: 'Track not found' });
+    }
+
+    let favorites = await prisma.playlist.findFirst({
+      where: { userId: req.user.id, isFavorites: true, deletedAt: null }
+    });
+
+    if (!favorites) {
+      favorites = await prisma.playlist.create({
+        data: {
+          title: FAVORITES_TITLE,
+          description: 'Автоматически созданный плейлист избранного',
+          isFavorites: true,
+          userId: req.user.id
+        }
+      });
+    }
+
+    const existing = await prisma.playlistTrack.findUnique({
+      where: {
+        playlistId_trackId: {
+          playlistId: favorites.id,
+          trackId
+        }
+      }
+    });
+
+    if (existing && !existing.deletedAt) {
+      return res.json({ success: true, added: false, playlistId: favorites.id });
+    }
+
+    if (existing && existing.deletedAt) {
+      await prisma.playlistTrack.update({
+        where: {
+          playlistId_trackId: {
+            playlistId: favorites.id,
+            trackId
+          }
+        },
+        data: { deletedAt: null, restoredAt: new Date() }
+      });
+
+      return res.json({ success: true, added: true, playlistId: favorites.id });
+    }
+
+    const maxOrder = await prisma.playlistTrack.aggregate({
+      where: { playlistId: favorites.id, deletedAt: null },
+      _max: { order: true }
+    });
+
+    await prisma.playlistTrack.create({
+      data: {
+        playlistId: favorites.id,
+        trackId,
+        order: (maxOrder._max.order ?? -1) + 1
+      }
+    });
+
+    res.json({ success: true, added: true, playlistId: favorites.id });
+  } catch (err) {
+    console.error('add favorite track error', err);
+    res.status(500).json({ error: 'Could not add track to favorites' });
   }
 });
 

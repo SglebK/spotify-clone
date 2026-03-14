@@ -4,8 +4,10 @@ import { useState, useEffect, useRef } from "react";
 
 export function useFooter42Logic(track, volume, onNextTrack, hasNextTrack) {
     const audioRef = useRef(null);
+    const volumeRef = useRef(volume);
 
     const [speed, setSpeed] = useState(1);
+    const speedRef = useRef(1);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -20,6 +22,14 @@ export function useFooter42Logic(track, volume, onNextTrack, hasNextTrack) {
         });
     };
 
+    useEffect(() => {
+        volumeRef.current = volume;
+    }, [volume]);
+
+    useEffect(() => {
+        speedRef.current = speed;
+    }, [speed]);
+
     // ⭐ При смене трека — обновляем src и запускаем воспроизведение
     useEffect(() => {
         const audio = audioRef.current;
@@ -32,13 +42,15 @@ export function useFooter42Logic(track, volume, onNextTrack, hasNextTrack) {
         }
 
         audio.src = track.audioUrl;
-        audio.volume = volume;
-        audio.playbackRate = speed;
+        audio.volume = volumeRef.current;
+        audio.playbackRate = speedRef.current;
+        setCurrentTime(0);
+        setDuration(0);
 
         audio.play().catch(() => {});
         setIsPlaying(true);
 
-    }, [track, volume, speed]);
+    }, [track]);
 
     // ⭐ Подписка на события аудио
     useEffect(() => {

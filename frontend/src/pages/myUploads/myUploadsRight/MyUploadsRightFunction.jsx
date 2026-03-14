@@ -1,17 +1,24 @@
 // src/pages/myUploads/myUploadsRight/MyUploadsRightFunction.jsx
 
 import { useCallback, useEffect, useState } from "react";
-import { fixUrl } from "../../../components/utils/fixUrl/fixUrl";
 import { API_URL } from "../../../components/utils/api/config";
 import { useAuth } from "../../../context/auth/AuthContext";
 
 export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTracks, setSelectedTrack) {
     const { accessToken } = useAuth();
     const [isPublic, setIsPublic] = useState(track?.isPublic ?? false);
+    const [playlistMessage, setPlaylistMessage] = useState("");
 
     useEffect(() => {
         setIsPublic(track?.isPublic ?? false);
     }, [track]);
+
+    useEffect(() => {
+        if (!playlistMessage) return;
+
+        const timeoutId = setTimeout(() => setPlaylistMessage(""), 2000);
+        return () => clearTimeout(timeoutId);
+    }, [playlistMessage]);
 
     const editTrack = useCallback(() => {
         if (!track) return;
@@ -106,27 +113,41 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
             .catch((err) => console.error("Ошибка смены публичности:", err));
     }, [track, isPublic, accessToken, setMyTracks, setSelectedTrack]);
 
-    // ⭐ Добавить в плейлист (в футер)
+    // ⭐ Добавить в "Любимые треки"
     const addToPlaylist = useCallback(() => {
         if (!track) return;
 
-        const preparedTrack = {
-            ...track,
-            audioUrl: fixUrl(track.audioUrl),
-            coverUrl: fixUrl(track.coverUrl)
-        };
-
-        setTracks(prev => {
-            if (prev.some((item) => item.id === preparedTrack.id)) {
-                return prev;
-            }
-            return [...prev, preparedTrack];
-        });
-
-    }, [track, setTracks]);
+        fetch(`${API_URL}/api/playlists/favorites/tracks`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${accessToken}`
+            },
+            body: JSON.stringify({ trackId: track.id })
+        })
+            .then(async (res) => {
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || "Не удалось добавить трек в любимые");
+                }
+                return data;
+            })
+            .then((data) => {
+                if (data.added) {
+                    setPlaylistMessage("Трек добавлен в любимые");
+                } else {
+                    setPlaylistMessage("Трек уже есть в любимых");
+                }
+            })
+            .catch((err) => {
+                console.error("Ошибка добавления в любимые:", err);
+                setPlaylistMessage(err.message || "Ошибка добавления в любимые");
+            });
+    }, [track, accessToken]);
 
     return {
         isPublic,
+        playlistMessage,
         editTrack,
         deleteTrack,
         togglePublic,
