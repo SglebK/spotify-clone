@@ -14,8 +14,27 @@
 .title {
     font-size: 20px;
     font-weight: 700;
-    margin-bottom: 18px;
     color: var(--text);
+}
+
+.headerRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.createButton {
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    font-size: 22px !important;
+    line-height: 1 !important;
 }
 
 /* Список */

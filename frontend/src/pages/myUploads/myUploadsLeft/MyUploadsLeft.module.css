@@ -36,13 +36,15 @@
 
 /* Один трек */
 .item {
-    padding: 10px 14px;
+    padding: 10px 12px;
     border-radius: 10px;
     cursor: pointer;
     color: var(--text);
     transition: background 0.25s, transform 0.15s;
     display: grid;
-    gap: 4px;
+    grid-template-columns: 48px 1fr;
+    gap: 10px;
+    align-items: center;
 }
 
 /* Hover */
@@ -68,6 +70,19 @@
 .trackArtist {
     font-size: 13px;
     opacity: 0.7;
+}
+
+.cover {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #111;
+}
+
+.trackText {
+    display: grid;
+    gap: 4px;
 }
 
 /* Скроллбар */

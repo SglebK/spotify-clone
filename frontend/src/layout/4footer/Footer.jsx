@@ -42,19 +42,33 @@ function Footer({
             return;
         }
 
-        fetch(`${API_URL}/api/playlists/my`, {
-            headers: {
-                "Authorization": `Bearer ${accessToken}`
-            }
-        })
-            .then(async (res) => {
-                if (!res.ok) {
-                    throw new Error("Не удалось загрузить плейлисты");
+        let active = true;
+
+        const loadPlaylists = () => {
+            fetch(`${API_URL}/api/playlists/my`, {
+                headers: {
+                    "Authorization": `Bearer ${accessToken}`
                 }
-                return res.json();
             })
-            .then((data) => setUserPlaylists(data))
-            .catch((err) => console.error("Ошибка загрузки плейлистов футера:", err));
+                .then(async (res) => {
+                    if (!res.ok) {
+                        throw new Error("Не удалось загрузить плейлисты");
+                    }
+                    return res.json();
+                })
+                .then((data) => {
+                    if (active) setUserPlaylists(data);
+                })
+                .catch((err) => console.error("Ошибка загрузки плейлистов футера:", err));
+        };
+
+        loadPlaylists();
+        const intervalId = setInterval(loadPlaylists, 12000);
+
+        return () => {
+            active = false;
+            clearInterval(intervalId);
+        };
     }, [user, accessToken]);
 
     const togglePlaylist = () => {

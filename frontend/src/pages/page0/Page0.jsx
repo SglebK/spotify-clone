@@ -5,20 +5,34 @@ import Toast from "../../components/toast/Toast.jsx";
 import { API_URL } from "../../components/utils/api/config";
 import { fixUrl } from "../../components/utils/fixUrl/fixUrl";
 
-function Page0({ onSelectTrack, tracks, setTracks, setPlaylistName }) {
+function Page0({ onSelectTrack, tracks, setTracks, setPlaylistName, searchQuery }) {
     const [serverTracks, setServerTracks] = useState([]);
     const [toast, setToast] = useState(null);
 
     useEffect(() => {
-        fetch(`${API_URL}/api/tracks`)
-            .then(async (res) => {
-                if (!res.ok) {
-                    throw new Error(`Ошибка загрузки: ${res.status}`);
-                }
-                return res.json();
-            })
-            .then(data => setServerTracks(data))
-            .catch(err => console.error("Ошибка загрузки треков:", err));
+        let active = true;
+
+        const loadTracks = () => {
+            fetch(`${API_URL}/api/tracks`)
+                .then(async (res) => {
+                    if (!res.ok) {
+                        throw new Error(`Ошибка загрузки: ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (active) setServerTracks(data);
+                })
+                .catch(err => console.error("Ошибка загрузки треков:", err));
+        };
+
+        loadTracks();
+        const intervalId = setInterval(loadTracks, 12000);
+
+        return () => {
+            active = false;
+            clearInterval(intervalId);
+        };
     }, []);
 
     const addToPlaylist = (track) => {
@@ -52,7 +66,16 @@ function Page0({ onSelectTrack, tracks, setTracks, setPlaylistName }) {
             <h2 className={styles.title}>Сидированные треки</h2>
 
             <div className={styles.grid}>
-                {serverTracks.map(track => (
+                {serverTracks
+                    .filter((track) => {
+                        const query = searchQuery?.trim().toLowerCase();
+                        if (!query) return true;
+                        return (
+                            track.title?.toLowerCase().includes(query) ||
+                            track.artist?.toLowerCase().includes(query)
+                        );
+                    })
+                    .map(track => (
                     <div key={track.id} className={styles.card}>
 
                         {/* ⭐ Плюсик в углу */}

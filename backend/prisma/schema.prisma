@@ -41,6 +41,7 @@ model Playlist {
   id          String   @id @default(uuid())
   title       String
   description String?
+  coverUrl    String?
   isPublic    Boolean  @default(false)
   isFavorites Boolean  @default(false)
 

@@ -11,14 +11,19 @@ export function useMyPlaylistsRightLogic(playlist, setPlaylists) {
 
     // Локальные состояния, чтобы UI обновлялся сразу
     const [title, setTitle] = useState(playlist?.title ?? "");
+    const [description, setDescription] = useState(playlist?.description ?? "");
     const [isPublic, setIsPublic] = useState(playlist?.isPublic ?? false);
+    const [coverFile, setCoverFile] = useState(null);
+    const [message, setMessage] = useState("");
 
     useEffect(() => {
         if (!playlist || !accessToken) return;
 
         // синхронизация локального состояния с выбранным плейлистом
         setTitle(playlist.title ?? "");
+        setDescription(playlist.description ?? "");
         setIsPublic(playlist.isPublic ?? false);
+        setCoverFile(null);
 
         // загрузка треков
         fetch(`${API_URL}/api/playlists/${playlist.id}`, {
@@ -30,33 +35,48 @@ export function useMyPlaylistsRightLogic(playlist, setPlaylists) {
 
     }, [playlist, accessToken]);
 
-    // Переименовать плейлист
-    const renamePlaylist = async () => {
-        const newName = prompt("Новое название:", title);
-        if (!newName) return;
+    useEffect(() => {
+        if (!message) return;
+        const timeoutId = setTimeout(() => setMessage(""), 2200);
+        return () => clearTimeout(timeoutId);
+    }, [message]);
+
+    const savePlaylistDetails = async () => {
+        if (!playlist) return;
+        if (!title.trim()) {
+            setMessage("Название плейлиста не может быть пустым");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("title", title.trim());
+        formData.append("description", description);
+        formData.append("isPublic", String(isPublic));
+        if (coverFile) {
+            formData.append("cover", coverFile);
+        }
 
         try {
-            const res = await fetch(`${API_URL}/api/playlists/${playlist.id}`, {
+            const res = await fetch(`${API_URL}/api/playlists/${playlist.id}/details`, {
                 method: "PUT",
                 headers: {
-                    "Content-Type": "application/json",
                     "Authorization": `Bearer ${accessToken}`
                 },
-                body: JSON.stringify({ Title: newName }) // ← ВАЖНО: backend ждёт Title
+                body: formData
             });
 
-            if (!res.ok) throw new Error("Ошибка переименования");
+            const updated = await res.json();
+            if (!res.ok) throw new Error(updated.error || "Ошибка обновления плейлиста");
 
-            // обновляем локальное состояние
-            setTitle(newName);
-
-            // обновляем список плейлистов
             setPlaylists(prev =>
-                prev.map(p => p.id === playlist.id ? { ...p, title: newName } : p)
+                prev.map(p => p.id === playlist.id ? { ...p, ...updated } : p)
             );
+            setCoverFile(null);
+            setMessage("Плейлист обновлён");
 
         } catch (err) {
             console.error(err);
+            setMessage(err.message || "Ошибка обновления плейлиста");
         }
     };
 
@@ -111,8 +131,14 @@ export function useMyPlaylistsRightLogic(playlist, setPlaylists) {
     return {
         tracks,
         title,
+        description,
         isPublic,
-        renamePlaylist,
+        coverFile,
+        message,
+        setTitle,
+        setDescription,
+        setCoverFile,
+        savePlaylistDetails,
         deletePlaylist,
         togglePrivacy
     };

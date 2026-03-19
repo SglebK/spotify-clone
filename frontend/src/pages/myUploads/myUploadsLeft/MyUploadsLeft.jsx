@@ -1,6 +1,7 @@
 // src/pages/myUploads/myUploadsLeft/MyUploadsLeft.jsx
 import React from "react";
 import styles from "./MyUploadsLeft.module.css";
+import { fixUrl } from "../../../components/utils/fixUrl/fixUrl";
 
 function MyUploadsLeft({ myTracks, loading, selectedTrack, onSelectTrack }) {
     return (
@@ -26,8 +27,15 @@ function MyUploadsLeft({ myTracks, loading, selectedTrack, onSelectTrack }) {
                             }`}
                             onClick={() => onSelectTrack(t)}
                         >
-                            <span className={styles.trackTitle}>{t.title}</span>
-                            <span className={styles.trackArtist}>{t.artist}</span>
+                            <img
+                                src={fixUrl(t.coverUrl) || "/default-cover.png"}
+                                alt={t.title}
+                                className={styles.cover}
+                            />
+                            <div className={styles.trackText}>
+                                <span className={styles.trackTitle}>{t.title}</span>
+                                <span className={styles.trackArtist}>{t.artist}</span>
+                            </div>
                         </li>
                     ))}
                 </ul>

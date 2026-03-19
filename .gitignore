@@ -2,3 +2,10 @@ backend/backend-dev.log
 backend/backend-dev.err.log
 frontend/frontend-dev.log
 frontend/frontend-dev.err.log
+frontend/dist
+frontend/node_modules
+backend/node_modules
+backend/.env
+frontend/.env
+frontend/.env.local
+backend/.env.local

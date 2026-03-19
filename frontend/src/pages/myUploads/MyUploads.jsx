@@ -8,7 +8,7 @@ import { fixUrl } from "../../components/utils/fixUrl/fixUrl";
 import MyUploadsLeft from "./myUploadsLeft/MyUploadsLeft.jsx";
 import MyUploadsRight from "./myUploadsRight/MyUploadsRight.jsx";
 
-function MyUploads({ onPlayTrack, setTracks }) {
+function MyUploads({ onPlayTrack, setTracks, searchQuery }) {
 
     const { accessToken } = useAuth();
 
@@ -19,6 +19,8 @@ function MyUploads({ onPlayTrack, setTracks }) {
     const [selectedTrack, setSelectedTrack] = useState(null);
 
     useEffect(() => {
+        let active = true;
+
         const load = async () => {
             try {
                 const res = await fetch(`${API_URL}/api/tracks/my`, {
@@ -29,17 +31,27 @@ function MyUploads({ onPlayTrack, setTracks }) {
 
                 const data = await res.json();
 
-                // ⭐ сохраняем только локальные треки
-                setMyTracks(data);
+                if (active) {
+                    setMyTracks(data);
+                    setSelectedTrack((prev) =>
+                        prev ? data.find((item) => item.id === prev.id) || null : null
+                    );
+                }
 
             } catch (err) {
                 console.error("Ошибка загрузки:", err);
             } finally {
-                setLoading(false);
+                if (active) setLoading(false);
             }
         };
 
         load();
+        const intervalId = setInterval(load, 12000);
+
+        return () => {
+            active = false;
+            clearInterval(intervalId);
+        };
     }, [accessToken]);
 
     const handlePlayTrack = (track) => {
@@ -58,7 +70,14 @@ function MyUploads({ onPlayTrack, setTracks }) {
 
                 {/* ⭐ Левый список — только загруженные треки */}
                 <MyUploadsLeft
-                    myTracks={myTracks}
+                    myTracks={myTracks.filter((track) => {
+                        const query = searchQuery?.trim().toLowerCase();
+                        if (!query) return true;
+                        return (
+                            track.title?.toLowerCase().includes(query) ||
+                            track.artist?.toLowerCase().includes(query)
+                        );
+                    })}
                     loading={loading}
                     selectedTrack={selectedTrack}
                     onSelectTrack={setSelectedTrack}

@@ -1,9 +1,11 @@
 .grid1 {
     display: grid;
-    grid-template-columns: 150px auto 300px 450px;
+    grid-template-columns: 150px minmax(0, 1fr) 300px 450px;
     grid-template-areas: 
         'grid11 grid12 grid13 grid14';
     height: 100%;
+    gap: 10px;
+    padding-right: 14px;
 }
 
 .grid11 {
@@ -32,7 +34,7 @@
 .grid12 {
     grid-area: grid12;
     display: grid;
-    grid-template-columns: 480px 75px;
+    grid-template-columns: minmax(0, 480px) 75px;
     grid-template-areas: 
         'grid121 grid122';
     /* border: 1px solid rgb(245, 6, 26);*/
@@ -100,19 +102,141 @@
 }
 
 .searchInput {
-  width: 460px;
+  width: 100%;
+  max-width: 460px;
   margin-top: 8px;
   height: 52px;
   border-radius: 30px;
-  color: rgb(224, 222, 222);
-  border: 1px solid grey;
-  position: relative
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.16);
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 18px rgba(0,0,0,0.14);
+  position: relative;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.searchInput:focus {
+  border-color: rgba(80, 200, 120, 0.6);
+  box-shadow: 0 0 0 3px rgba(80, 200, 120, 0.12), 0 10px 24px rgba(0,0,0,0.18);
+  transform: translateY(-1px);
 }
 
 .logButton {
   width: 200px; 
 }
 
+.topLinkButton {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+.topLinkButton:hover {
+  opacity: 0.82;
+}
+
+@media (max-width: 1200px) {
+  .grid1 {
+    grid-template-columns: 140px minmax(0, 1fr) 220px 290px;
+  }
+
+  .grid12 {
+    grid-template-columns: minmax(0, 1fr) 60px;
+  }
+
+  .searchInput {
+    width: 100%;
+  }
+
+  .logButton {
+    width: 150px;
+  }
+}
+
+@media (max-width: 900px) {
+  .grid1 {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'grid11'
+      'grid12'
+      'grid13'
+      'grid14';
+    height: auto;
+    gap: 8px;
+    padding: 8px 12px 10px;
+  }
+
+  .grid11,
+  .grid12,
+  .grid13,
+  .grid14 {
+    justify-content: center;
+  }
+
+  .grid11 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    grid-template-columns: none;
+    padding: 0 4px;
+  }
+
+  .grid111,
+  .grid112 {
+    padding: 0;
+  }
+
+  .grid12 {
+    grid-template-columns: minmax(0, 1fr) 60px;
+    padding: 0;
+  }
+
+  .grid13,
+  .grid14 {
+    flex-wrap: wrap;
+    padding: 2px 0 0;
+  }
+
+  .searchInput {
+    margin-top: 0;
+    height: 48px;
+  }
+}
+
+@media (max-width: 640px) {
+  .grid12 {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .grid121,
+  .grid122 {
+    padding: 0;
+  }
+
+  .grid122 {
+    display: flex;
+    justify-content: center;
+  }
+
+  .grid13,
+  .grid14 {
+    gap: 8px;
+  }
+
+  .buttonSize,
+  .logButton {
+    width: min(100%, 280px);
+  }
+
+  .email {
+    font-size: 16px;
+    text-align: center;
+  }
+}
 
 
 

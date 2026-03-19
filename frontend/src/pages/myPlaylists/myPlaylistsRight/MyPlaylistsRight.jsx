@@ -10,14 +10,21 @@ function MyPlaylistsRight({
     setPlaylists,
     onPlayTrack,
     onPlayPlaylist,
-    onSetPlaylistName
+    onSetPlaylistName,
+    searchQuery
 }) {
 
     const {
         tracks,
         title,
+        description,
         isPublic,
-        renamePlaylist,
+        coverFile,
+        message,
+        setTitle,
+        setDescription,
+        setCoverFile,
+        savePlaylistDetails,
         deletePlaylist,
         togglePrivacy
     } = useMyPlaylistsRightLogic(playlist, setPlaylists);
@@ -37,8 +44,8 @@ function MyPlaylistsRight({
             {/* Панель кнопок */}
             <div className={styles.grid321}>
 
-                <button className={`button ${styles.buttonFix}`} onClick={renamePlaylist}>
-                    Переименовать
+                <button className={`button ${styles.buttonFix}`} onClick={savePlaylistDetails}>
+                    Сохранить
                 </button>
 
                 <button className={`button ${styles.buttonFix}`} onClick={deletePlaylist}>
@@ -80,8 +87,30 @@ function MyPlaylistsRight({
 
             {/* Название + количество */}
             <div className={styles.grid322}>
-                <h2 className={styles.plTitle}>{title}</h2>
+                <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className={`input ${styles.editInput}`}
+                    placeholder="Название плейлиста"
+                />
+                <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className={`input ${styles.editTextarea}`}
+                    placeholder="Описание плейлиста"
+                />
+                <label className={styles.fileLabel}>
+                    <span>Новая обложка</span>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
+                    />
+                    {coverFile && <span className={styles.fileHint}>{coverFile.name}</span>}
+                </label>
                 <p className={styles.count}>{tracks.length} треков</p>
+                {message && <p className={styles.message}>{message}</p>}
             </div>
 
             {/* Список треков */}
@@ -93,7 +122,16 @@ function MyPlaylistsRight({
                 )}
 
                 <ul className={styles.trackList}>
-                    {tracks.map(t => (
+                    {tracks
+                        .filter((trackItem) => {
+                            const query = searchQuery?.trim().toLowerCase();
+                            if (!query) return true;
+                            return (
+                                trackItem.title?.toLowerCase().includes(query) ||
+                                trackItem.artist?.toLowerCase().includes(query)
+                            );
+                        })
+                        .map(t => (
                         <li key={t.id} className={styles.trackItem}>
 
                             <img

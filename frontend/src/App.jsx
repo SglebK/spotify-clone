@@ -21,6 +21,7 @@ function App() {
 
   // ⭐ Единое название плейлиста (временного или сохранённого)
   const [playlistName, setPlaylistName] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -32,7 +33,12 @@ function App() {
       <div className={`${styles.grid} ${styles[theme]} ${theme}`}>
         
         <div className={styles.grid1}>
-          <Header theme={theme} />
+          <Header
+            theme={theme}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            currentTrack={currentTrack}
+          />
         </div>
 
         <div className={styles.grid2}>
@@ -58,6 +64,7 @@ function App() {
             // ⭐ Передаём название плейлиста
             playlistName={playlistName}
             setPlaylistName={setPlaylistName}
+            searchQuery={searchQuery}
           />
         </div>
 

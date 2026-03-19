@@ -6,8 +6,8 @@ import ProgressBar from "../../../components/progressBar/ProgressBar";
 
 import { useFooter42Logic } from "./Footer42Function";
 
-import featured_play_list1 from '../../../assets/icons/featured_play_list1.png';
-import featured_play_list2 from '../../../assets/icons/featured_play_list2.png';
+import stacks1 from '../../../assets/icons/stacks1.png';
+import stacks2 from '../../../assets/icons/stacks2.png';
 import play1 from '../../../assets/icons/play1.png';
 import play2 from '../../../assets/icons/play2.png';
 import t10_1 from '../../../assets/icons/t10_1.png';
@@ -51,7 +51,7 @@ function Footer42({ theme, track, volume, onTogglePlaylist, onNextTrack, hasNext
         one: theme === "dark" ? repeat_one1 : repeat_one2
     }[repeatMode];
 
-    const featured_play_listIcon = theme === 'dark' ? featured_play_list1 : featured_play_list2;
+    const playlistIcon = theme === 'dark' ? stacks1 : stacks2;
     const playIcon = theme === 'dark' ? play1 : play2;
     const t10_Icon = theme === 'dark' ? t10_1 : t10_2;
     const t30_Icon = theme === 'dark' ? t30_1 : t30_2;
@@ -68,7 +68,7 @@ function Footer42({ theme, track, volume, onTogglePlaylist, onNextTrack, hasNext
             <div className={styles.controls}>
 
                 <button className={styles.playBtn} onClick={onTogglePlaylist}>
-                    <img src={featured_play_listIcon} className={styles.iconS} />
+                    <img src={playlistIcon} className={styles.iconS} />
                 </button>
 
                 <button

@@ -9,10 +9,43 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
     const { accessToken } = useAuth();
     const [isPublic, setIsPublic] = useState(track?.isPublic ?? false);
     const [playlistMessage, setPlaylistMessage] = useState("");
+    const [title, setTitle] = useState(track?.title ?? "");
+    const [artist, setArtist] = useState(track?.artist ?? "");
+    const [coverFile, setCoverFile] = useState(null);
+    const [playlists, setPlaylists] = useState([]);
+    const [isPlaylistPickerOpen, setIsPlaylistPickerOpen] = useState(false);
+    const [playlistSaving, setPlaylistSaving] = useState(false);
+
+    // The picker modal needs fresh playlists after both "save" and "create + save" flows.
+    const loadPlaylists = useCallback(() => {
+        if (!accessToken) return Promise.resolve();
+
+        return fetch(`${API_URL}/api/playlists/my`, {
+            headers: {
+                "Authorization": `Bearer ${accessToken}`
+            }
+        })
+            .then(async (res) => {
+                if (!res.ok) {
+                    throw new Error("Не удалось загрузить плейлисты");
+                }
+                return res.json();
+            })
+            .then((data) => {
+                setPlaylists(data);
+            });
+    }, [accessToken]);
 
     useEffect(() => {
         setIsPublic(track?.isPublic ?? false);
+        setTitle(track?.title ?? "");
+        setArtist(track?.artist ?? "");
+        setCoverFile(null);
     }, [track]);
+
+    useEffect(() => {
+        loadPlaylists().catch((err) => console.error("Ошибка загрузки плейлистов:", err));
+    }, [loadPlaylists]);
 
     useEffect(() => {
         if (!playlistMessage) return;
@@ -23,44 +56,46 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
 
     const editTrack = useCallback(() => {
         if (!track) return;
+        if (!title.trim() || !artist.trim()) {
+            setPlaylistMessage("Заполните название и исполнителя");
+            return;
+        }
 
-        const nextTitle = prompt("Новое название трека:", track.title);
-        if (nextTitle == null) return;
+        const formData = new FormData();
+        formData.append("title", title.trim());
+        formData.append("artist", artist.trim());
+        formData.append("isPublic", String(isPublic));
+        if (coverFile) {
+            formData.append("cover", coverFile);
+        }
 
-        const cleanTitle = nextTitle.trim();
-        if (!cleanTitle) return;
-
-        const nextArtist = prompt("Новый исполнитель:", track.artist);
-        if (nextArtist == null) return;
-
-        const cleanArtist = nextArtist.trim();
-        if (!cleanArtist) return;
-
-        fetch(`${API_URL}/api/tracks/${track.id}`, {
+        fetch(`${API_URL}/api/tracks/${track.id}/details`, {
             method: "PUT",
             headers: {
-                "Content-Type": "application/json",
                 "Authorization": `Bearer ${accessToken}`
             },
-            body: JSON.stringify({
-                title: cleanTitle,
-                artist: cleanArtist
-            })
+            body: formData
         })
             .then(async (res) => {
+                const data = await res.json();
                 if (!res.ok) {
-                    throw new Error("Не удалось обновить трек");
+                    throw new Error(data.error || "Не удалось обновить трек");
                 }
-                return res.json();
+                return data;
             })
             .then((updatedTrack) => {
                 setMyTracks((prev) =>
                     prev.map((item) => (item.id === updatedTrack.id ? updatedTrack : item))
                 );
                 setSelectedTrack(updatedTrack);
+                setCoverFile(null);
+                setPlaylistMessage("Трек обновлён");
             })
-            .catch((err) => console.error("Ошибка редактирования трека:", err));
-    }, [track, accessToken, setMyTracks, setSelectedTrack]);
+            .catch((err) => {
+                console.error("Ошибка редактирования трека:", err);
+                setPlaylistMessage(err.message || "Не удалось обновить трек");
+            });
+    }, [track, title, artist, isPublic, coverFile, accessToken, setMyTracks, setSelectedTrack]);
 
     const deleteTrack = useCallback(() => {
         if (!track) return;
@@ -145,8 +180,7 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
             });
     }, [track, accessToken]);
 
-    // ⭐ Добавить в текущий плейлист плеера
-    const addToPlaylist = useCallback(() => {
+    const addToQueue = useCallback(() => {
         if (!track) return;
 
         const preparedTrack = {
@@ -177,16 +211,118 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
             onPlayTrack(preparedTrack);
         }
 
-        setPlaylistMessage("Трек добавлен в текущий плейлист");
+        setPlaylistMessage("Трек добавлен в очередь плеера");
     }, [track, setTracks, onPlayTrack]);
+
+    // Shared helper avoids duplicating the same POST logic in both playlist actions.
+    const addTrackToPlaylist = useCallback(async (playlistId) => {
+        if (!track || !playlistId) {
+            throw new Error("Сначала выберите плейлист");
+        }
+
+        const response = await fetch(`${API_URL}/api/playlist-tracks`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${accessToken}`
+            },
+            body: JSON.stringify({
+                playlistId,
+                trackId: track.id
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Не удалось добавить трек в плейлист");
+        }
+
+        return data;
+    }, [track, accessToken]);
+
+    const addToPlaylist = useCallback(async (playlistId) => {
+        setPlaylistSaving(true);
+
+        try {
+            const data = await addTrackToPlaylist(playlistId);
+            const playlistName = playlists.find((item) => item.id === playlistId)?.title || "плейлист";
+
+            if (data.added) {
+                setPlaylistMessage(`Трек добавлен в "${playlistName}"`);
+            } else {
+                setPlaylistMessage("Этот трек уже есть в выбранном плейлисте");
+            }
+
+            setIsPlaylistPickerOpen(false);
+            await loadPlaylists();
+        } catch (err) {
+            console.error("Ошибка добавления в плейлист:", err);
+            setPlaylistMessage(err.message || "Не удалось добавить трек в плейлист");
+        } finally {
+            setPlaylistSaving(false);
+        }
+    }, [addTrackToPlaylist, playlists, loadPlaylists]);
+
+    const createPlaylistAndAdd = useCallback(async (playlistName) => {
+        const cleanTitle = playlistName.trim();
+        if (!cleanTitle) {
+            setPlaylistMessage("Введите название нового плейлиста");
+            return;
+        }
+
+        setPlaylistSaving(true);
+
+        try {
+            const createRes = await fetch(`${API_URL}/api/playlists`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${accessToken}`
+                },
+                body: JSON.stringify({
+                    title: cleanTitle,
+                    description: null
+                })
+            });
+
+            const createdPlaylist = await createRes.json();
+
+            if (!createRes.ok) {
+                throw new Error(createdPlaylist.error || "Не удалось создать плейлист");
+            }
+
+            await addTrackToPlaylist(createdPlaylist.id);
+            setPlaylistMessage(`Создан плейлист "${cleanTitle}" и трек сохранён`);
+            setIsPlaylistPickerOpen(false);
+            await loadPlaylists();
+        } catch (err) {
+            console.error("Ошибка создания плейлиста:", err);
+            setPlaylistMessage(err.message || "Не удалось создать плейлист");
+        } finally {
+            setPlaylistSaving(false);
+        }
+    }, [accessToken, addTrackToPlaylist, loadPlaylists]);
 
     return {
         isPublic,
         playlistMessage,
+        title,
+        artist,
+        coverFile,
+        playlists,
+        isPlaylistPickerOpen,
+        playlistSaving,
+        setTitle,
+        setArtist,
+        setCoverFile,
+        setIsPlaylistPickerOpen,
         editTrack,
         deleteTrack,
         togglePublic,
         addToPlaylist,
+        createPlaylistAndAdd,
+        addToQueue,
         addToFavorites
     };
 }

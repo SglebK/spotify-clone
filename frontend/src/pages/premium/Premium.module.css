@@ -1,0 +1,25 @@
+.page {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.card {
+    max-width: 760px;
+    padding: 28px;
+    border-radius: 18px;
+    background: linear-gradient(145deg, rgba(80, 200, 120, 0.12), rgba(255,255,255,0.04));
+    border: 1px solid var(--button-border);
+    box-shadow: 0 12px 30px var(--button-shadow);
+}
+
+.card h2 {
+    margin-top: 0;
+}
+
+.card p {
+    opacity: 0.82;
+    line-height: 1.6;
+}

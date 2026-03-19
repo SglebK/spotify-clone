@@ -10,15 +10,15 @@ function Aside({ theme }) {
     return (
         <aside className={`${styles.grid2} ${styles[theme]}`}>
             <div className={styles.grid21}>
-                <Link to="/page0" className="button">Все треки</Link>
+                <Link to="/" className="button">Главная</Link>
             </div>
 
             <div className={styles.grid22}>
-                
+                <Link to="/page0" className="button">Все треки</Link>
             </div>
 
             <div className={styles.grid23}>
-                
+                <Link to="/playlists" className="button">Все плейлисты</Link>
             </div>
 
             <div className={styles.divider1}></div>

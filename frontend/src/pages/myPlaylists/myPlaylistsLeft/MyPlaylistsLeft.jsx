@@ -3,11 +3,20 @@
 import React from "react";
 import styles from "./MyPlaylistsLeft.module.css";
 
-function MyPlaylistsLeft({ playlists, selectedId, setSelectedId }) {
+function MyPlaylistsLeft({ playlists, selectedId, setSelectedId, onCreatePlaylist }) {
 
     return (
         <div className={styles.left}>
-            <h2 className={styles.title}>Мои плейлисты</h2>
+            <div className={styles.headerRow}>
+                <h2 className={styles.title}>Мои плейлисты</h2>
+                <button
+                    type="button"
+                    className={`button ${styles.createButton}`}
+                    onClick={onCreatePlaylist}
+                >
+                    +
+                </button>
+            </div>
 
             <div className={styles.list}>
                 {playlists.length === 0 && (

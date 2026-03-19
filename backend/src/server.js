@@ -61,6 +61,14 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+function containsInsensitive(field, value) {
+  return {
+    [field]: {
+      contains: value
+    }
+  };
+}
+
 // ------------------------------------------------------------------
 app.get('/api/status/ping', (req, res) => {
   res.json({ ok: true });
@@ -138,10 +146,21 @@ app.get('/api/auth/me', authenticate, (req, res) => {
 // ------------------------------------------------------------------
 // tracks
 app.get('/api/tracks', async (req, res) => {
+  const search = (req.query.search || '').trim();
   const tracks = await prisma.track.findMany({
     where: {
       deletedAt: null,
-      OR: [{ userId: null }, { isPublic: true }]
+      OR: [{ userId: null }, { isPublic: true }],
+      ...(search
+        ? {
+            AND: [{
+              OR: [
+                containsInsensitive('title', search),
+                containsInsensitive('artist', search)
+              ]
+            }]
+          }
+        : {})
     },
     orderBy: { createdAt: 'desc' }
   });
@@ -149,8 +168,20 @@ app.get('/api/tracks', async (req, res) => {
 });
 
 app.get('/api/tracks/my', authenticate, async (req, res) => {
+  const search = (req.query.search || '').trim();
   const tracks = await prisma.track.findMany({
-    where: { userId: req.user.id, deletedAt: null },
+    where: {
+      userId: req.user.id,
+      deletedAt: null,
+      ...(search
+        ? {
+            OR: [
+              containsInsensitive('title', search),
+              containsInsensitive('artist', search)
+            ]
+          }
+        : {})
+    },
     orderBy: { createdAt: 'desc' }
   });
   res.json(tracks);
@@ -214,6 +245,43 @@ app.put('/api/tracks/:id', authenticate, async (req, res) => {
   }
 });
 
+app.put('/api/tracks/:id/details', authenticate, upload.fields([{ name: 'cover', maxCount: 1 }]), async (req, res) => {
+  const { id } = req.params;
+  const { title, artist, isPublic } = req.body;
+  const data = {};
+
+  if (typeof title === 'string' && title.trim()) data.title = title.trim();
+  if (typeof artist === 'string' && artist.trim()) data.artist = artist.trim();
+  if (typeof isPublic === 'string') data.isPublic = isPublic === 'true';
+  if (typeof isPublic === 'boolean') data.isPublic = isPublic;
+
+  const coverFile = req.files?.cover?.[0];
+  if (coverFile) {
+    data.coverUrl = `/uploads/covers/${coverFile.filename}`;
+  }
+
+  if (Object.keys(data).length === 0) {
+    return res.status(400).json({ error: 'Nothing to update' });
+  }
+
+  try {
+    const updated = await prisma.track.updateMany({
+      where: { id, userId: req.user.id, deletedAt: null },
+      data
+    });
+
+    if (updated.count === 0) {
+      return res.status(404).json({ error: 'Track not found' });
+    }
+
+    const track = await prisma.track.findUnique({ where: { id } });
+    res.json(track);
+  } catch (err) {
+    console.error('update track details error', err);
+    res.status(500).json({ error: 'Unable to update track details' });
+  }
+});
+
 app.delete('/api/tracks/:id', authenticate, async (req, res) => {
   const { id } = req.params;
 
@@ -242,11 +310,93 @@ app.delete('/api/tracks/:id', authenticate, async (req, res) => {
 // ------------------------------------------------------------------
 // playlists
 app.get('/api/playlists/my', authenticate, async (req, res) => {
+  const search = (req.query.search || '').trim();
   const lists = await prisma.playlist.findMany({
-    where: { userId: req.user.id, deletedAt: null },
+    where: {
+      userId: req.user.id,
+      deletedAt: null,
+      ...(search
+        ? {
+            OR: [
+              containsInsensitive('title', search),
+              containsInsensitive('description', search)
+            ]
+          }
+        : {})
+    },
     orderBy: [{ isFavorites: 'desc' }, { createdAt: 'desc' }]
   });
   res.json(lists);
+});
+
+app.get('/api/playlists/public', async (req, res) => {
+  const search = (req.query.search || '').trim();
+
+  // Public playlists power both the dedicated page and the global search results view.
+  const lists = await prisma.playlist.findMany({
+    where: {
+      deletedAt: null,
+      isPublic: true,
+      ...(search
+        ? {
+            OR: [
+              containsInsensitive('title', search),
+              containsInsensitive('description', search)
+            ]
+          }
+        : {})
+    },
+    include: {
+      user: {
+        select: {
+          email: true
+        }
+      },
+      tracks: {
+        where: { deletedAt: null },
+        include: { track: true },
+        orderBy: { order: 'asc' }
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  res.json(lists.map((playlist) => ({
+    ...playlist,
+    ownerEmail: playlist.user?.email || null,
+    trackCount: playlist.tracks.length,
+    tracks: playlist.tracks.map((item) => item.track)
+  })));
+});
+
+app.get('/api/playlists/public/:id', async (req, res) => {
+  const { id } = req.params;
+
+  const playlist = await prisma.playlist.findFirst({
+    where: { id, deletedAt: null, isPublic: true },
+    include: {
+      user: {
+        select: {
+          email: true
+        }
+      },
+      tracks: {
+        where: { deletedAt: null },
+        orderBy: { order: 'asc' },
+        include: { track: true }
+      }
+    }
+  });
+
+  if (!playlist) {
+    return res.status(404).json({ error: 'Playlist not found' });
+  }
+
+  res.json({
+    ...playlist,
+    ownerEmail: playlist.user?.email || null,
+    tracks: playlist.tracks.map((item) => item.track)
+  });
 });
 
 app.post('/api/playlists', authenticate, async (req, res) => {
@@ -257,6 +407,7 @@ app.post('/api/playlists', authenticate, async (req, res) => {
       data: {
         title,
         description: description || null,
+        coverUrl: null,
         isFavorites: false,
         userId: req.user.id
       }
@@ -292,6 +443,8 @@ app.put('/api/playlists/:id', authenticate, async (req, res) => {
   const update = {};
   if (input.Title != null) update.title = input.Title;
   if (input.title != null) update.title = input.title;
+  if (input.Description != null) update.description = input.Description;
+  if (input.description != null) update.description = input.description;
   if (input.IsPublic != null) update.isPublic = input.IsPublic;
   if (input.isPublic != null) update.isPublic = input.isPublic;
   try {
@@ -342,6 +495,51 @@ app.delete('/api/playlists/:id', authenticate, async (req, res) => {
   }
 });
 
+app.put('/api/playlists/:id/details', authenticate, upload.fields([{ name: 'cover', maxCount: 1 }]), async (req, res) => {
+  const { id } = req.params;
+  const { title, description, isPublic } = req.body;
+  const data = {};
+
+  if (typeof title === 'string' && title.trim()) data.title = title.trim();
+  if (typeof description === 'string') data.description = description.trim() || null;
+  if (typeof isPublic === 'string') data.isPublic = isPublic === 'true';
+  if (typeof isPublic === 'boolean') data.isPublic = isPublic;
+
+  const coverFile = req.files?.cover?.[0];
+  if (coverFile) {
+    data.coverUrl = `/uploads/covers/${coverFile.filename}`;
+  }
+
+  if (Object.keys(data).length === 0) {
+    return res.status(400).json({ error: 'Nothing to update' });
+  }
+
+  try {
+    const playlist = await prisma.playlist.findFirst({
+      where: { id, userId: req.user.id, deletedAt: null }
+    });
+
+    if (!playlist) {
+      return res.status(404).json({ error: 'Playlist not found' });
+    }
+
+    if (playlist.isFavorites && data.title && data.title !== playlist.title) {
+      return res.status(400).json({ error: 'Favorites playlist cannot be renamed' });
+    }
+
+    await prisma.playlist.update({
+      where: { id },
+      data
+    });
+
+    const updated = await prisma.playlist.findUnique({ where: { id } });
+    res.json(updated);
+  } catch (err) {
+    console.error('update playlist details error', err);
+    res.status(500).json({ error: 'Unable to update playlist details' });
+  }
+});
+
 app.post('/api/playlists/favorites/tracks', authenticate, async (req, res) => {
   const { trackId } = req.body;
 
@@ -362,6 +560,7 @@ app.post('/api/playlists/favorites/tracks', authenticate, async (req, res) => {
       return res.status(404).json({ error: 'Track not found' });
     }
 
+    // "Любимые треки" is created lazily so new users can save favorites without any setup step.
     let favorites = await prisma.playlist.findFirst({
       where: { userId: req.user.id, isFavorites: true, deletedAt: null }
     });
@@ -371,6 +570,7 @@ app.post('/api/playlists/favorites/tracks', authenticate, async (req, res) => {
         data: {
           title: FAVORITES_TITLE,
           description: 'Автоматически созданный плейлист избранного',
+          coverUrl: null,
           isFavorites: true,
           userId: req.user.id
         }
@@ -444,6 +644,7 @@ app.post('/api/playlist-tracks', authenticate, async (req, res) => {
       return res.status(404).json({ error: 'Track not found' });
     }
 
+    // Duplicate protection keeps the new picker UX predictable when users save the same track twice.
     const existing = await prisma.playlistTrack.findUnique({
       where: {
         playlistId_trackId: {

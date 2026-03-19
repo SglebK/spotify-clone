@@ -15,6 +15,10 @@ import HomeDark from '../../pages/home/HomeDark.jsx';
 import MyPlaylists from '../../pages/myPlaylists/MyPlaylists.jsx';
 import UploadTrack from '../../pages/uploadTrack/UploadTrack.jsx';
 import MyUploads from "../../pages/myUploads/MyUploads.jsx";
+import AllPlaylists from "../../pages/allPlaylists/AllPlaylists.jsx";
+import Premium from "../../pages/premium/Premium.jsx";
+import Help from "../../pages/help/Help.jsx";
+import SearchResults from "../../pages/searchResults/SearchResults.jsx";
 
 function Navigator({ 
   theme, 
@@ -25,8 +29,24 @@ function Navigator({
   currentTrack,
   setCurrentTrack,
   playlistName,
-  setPlaylistName
+  setPlaylistName,
+  searchQuery
 }) {
+  const hasSearch = searchQuery?.trim().length > 0;
+
+  if (hasSearch) {
+    return (
+      <div className={`${styles.grid3} ${styles[theme]}`}>
+        <SearchResults
+          searchQuery={searchQuery}
+          onPlayTrack={setTrack}
+          setTracks={setTracks}
+          setCurrentTrack={setCurrentTrack}
+          setPlaylistName={setPlaylistName}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={`${styles.grid3} ${styles[theme]}`}>
@@ -34,6 +54,8 @@ function Navigator({
 
         <Route path="/" element={<Home theme={theme} />} />
         <Route path="/home-dark" element={<HomeDark />} />
+        <Route path="/premium" element={<Premium />} />
+        <Route path="/help" element={<Help />} />
 
         <Route
           path="/configuration"
@@ -48,6 +70,20 @@ function Navigator({
               tracks={tracks}
               setTracks={setTracks}
               setPlaylistName={setPlaylistName}
+              searchQuery={searchQuery}
+            />
+          }
+        />
+
+        <Route
+          path="/playlists"
+          element={
+            <AllPlaylists
+              onPlayTrack={setTrack}
+              setTracks={setTracks}
+              setCurrentTrack={setCurrentTrack}
+              setPlaylistName={setPlaylistName}
+              searchQuery={searchQuery}
             />
           }
         />
@@ -63,6 +99,7 @@ function Navigator({
                 setCurrentTrack={setCurrentTrack}
                 playlistName={playlistName}
                 setPlaylistName={setPlaylistName}
+                searchQuery={searchQuery}
               />
             </PrivateRoute>
           }
@@ -85,6 +122,7 @@ function Navigator({
                 onPlayTrack={setTrack}
                 tracks={tracks}          // плейлист футера
                 setTracks={setTracks}    // обновление плейлиста футера
+                searchQuery={searchQuery}
               />
             </PrivateRoute>
           }

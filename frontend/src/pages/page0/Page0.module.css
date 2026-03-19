@@ -1,6 +1,8 @@
 /* src/pages/page0/Page0.module.css */
 
 .page {
+  height: 100%;
+  overflow-y: auto;
   padding: 20px;
 }
 
@@ -14,6 +16,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 20px;
+  padding-bottom: 22px;
 }
 
 .card {
@@ -85,4 +88,44 @@
 .plusBtn:hover {
   transform: scale(1.1);
   opacity: 0.9;
+}
+
+@media (max-width: 900px) {
+  .page {
+    padding: 16px 14px 20px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  .title {
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .card {
+    padding: 10px;
+  }
+
+  .cover {
+    max-width: 132px;
+    max-height: 132px;
+  }
+
+  .trackTitle {
+    font-size: 15px;
+  }
+
+  .artist {
+    font-size: 13px;
+  }
 }
