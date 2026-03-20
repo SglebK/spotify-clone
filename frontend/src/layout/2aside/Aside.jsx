@@ -46,6 +46,11 @@ function Aside({ theme }) {
                     <Link to="/myUploads" className="button">Мои треки</Link>
                 </div>
             )}
+            {user && (
+                <div className={styles.grid28}>
+                    <Link to="/favorites" className="button">Любимые</Link>
+                </div>
+            )}
 
         </aside>
     );

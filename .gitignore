@@ -9,3 +9,5 @@ backend/.env
 frontend/.env
 frontend/.env.local
 backend/.env.local
+# keep the prepared SQLite database in git
+!backend/prisma/dev.db

@@ -1,7 +1,6 @@
 // src/pages/register/Register.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TimeZoneSelector from '../../components/timeZoneSelector/TimeZoneSelector';
 import { API_URL } from "../../components/utils/api/config";
 import styles from './Register.module.css';
 import { useError } from '../../context/error/ErrorContext.jsx';
@@ -16,7 +15,6 @@ function Register({ theme }) {
   const [emailInput, setEmailInput] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [timeZoneId, setTimeZoneId] = useState('');
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -39,7 +37,7 @@ function Register({ theme }) {
         body: JSON.stringify({
           email: emailInput,
           password,
-          timeZone: timeZoneId || "UTC"
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
         })
       });
 
@@ -99,11 +97,6 @@ function Register({ theme }) {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
-          </div>
-
-          <div className={styles.gridRow}>
-            <label>Таймзона:</label>
-            <TimeZoneSelector onSelect={setTimeZoneId} />
           </div>
 
           <button

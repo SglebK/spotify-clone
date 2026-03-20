@@ -15,16 +15,14 @@
   animation: fadeIn 0.25s ease;
 }
 
-/* Светлая тема */
-.light {
+.toast {
   background: #ffffff;
   color: #000;
   border: 2px solid #ddd;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
 }
 
-/* Тёмная тема */
-.dark {
+[data-theme="dark"] .toast {
   background: #1e1e1e;
   color: #fff;
   border: 2px solid #444;

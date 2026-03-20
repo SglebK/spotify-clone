@@ -2,11 +2,16 @@ import React, { useEffect, useState } from "react";
 import styles from "./AllPlaylists.module.css";
 import { API_URL } from "../../components/utils/api/config";
 import { fixUrl } from "../../components/utils/fixUrl/fixUrl";
+import { useAuth } from "../../context/auth/AuthContext.jsx";
+import { authFetch } from "../../components/utils/api/authFetch.js";
+import { useError } from "../../context/error/ErrorContext.jsx";
 
 function AllPlaylists({ onPlayTrack, setTracks, setCurrentTrack, setPlaylistName, searchQuery }) {
     const [playlists, setPlaylists] = useState([]);
     const [selectedId, setSelectedId] = useState(null);
     const [loading, setLoading] = useState(true);
+    const { user } = useAuth();
+    const { showError } = useError();
 
     useEffect(() => {
         let active = true;
@@ -20,6 +25,7 @@ function AllPlaylists({ onPlayTrack, setTracks, setCurrentTrack, setPlaylistName
                 setSelectedId((prev) => prev || data[0]?.id || null);
             } catch (err) {
                 console.error("Ошибка загрузки публичных плейлистов:", err);
+                showError("Не удалось загрузить публичные плейлисты");
             } finally {
                 if (active) setLoading(false);
             }
@@ -32,7 +38,7 @@ function AllPlaylists({ onPlayTrack, setTracks, setCurrentTrack, setPlaylistName
             active = false;
             clearInterval(intervalId);
         };
-    }, []);
+    }, [showError]);
 
     const filteredPlaylists = playlists.filter((playlist) => {
         const query = searchQuery?.trim().toLowerCase();
@@ -46,6 +52,26 @@ function AllPlaylists({ onPlayTrack, setTracks, setCurrentTrack, setPlaylistName
     });
 
     const selected = filteredPlaylists.find((playlist) => playlist.id === selectedId) || filteredPlaylists[0] || null;
+
+    const deletePlaylist = async (playlistId) => {
+        if (!user?.isAdmin) return;
+        if (!confirm("Удалить этот плейлист?")) return;
+
+        try {
+            const res = await authFetch(`${API_URL}/api/playlists/${playlistId}`, {
+                method: "DELETE"
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || "Не удалось удалить плейлист");
+            }
+
+            setPlaylists((prev) => prev.filter((item) => item.id !== playlistId));
+            setSelectedId((prev) => (prev === playlistId ? null : prev));
+        } catch (error) {
+            showError(error.message || "Не удалось удалить плейлист");
+        }
+    };
 
     return (
         <div className={styles.page}>
@@ -116,6 +142,14 @@ function AllPlaylists({ onPlayTrack, setTracks, setCurrentTrack, setPlaylistName
                                 >
                                     Слушать плейлист
                                 </button>
+                                {user?.isAdmin && (
+                                    <button
+                                        className={`button ${styles.playButton} ${styles.deleteButton}`}
+                                        onClick={() => deletePlaylist(selected.id)}
+                                    >
+                                        Удалить плейлист
+                                    </button>
+                                )}
                             </div>
                         </div>
 

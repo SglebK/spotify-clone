@@ -8,6 +8,8 @@ import MyPlaylistsRight from "./myPlaylistsRight/MyPlaylistsRight";
 
 import { useAuth } from "../../context/auth/AuthContext";
 import { API_URL } from "../../components/utils/api/config";
+import { authFetch } from "../../components/utils/api/authFetch.js";
+import { useError } from "../../context/error/ErrorContext.jsx";
 
 function MyPlaylists({ 
     tracks,          
@@ -18,6 +20,7 @@ function MyPlaylists({
 }) {
 
     const { user, accessToken } = useAuth();
+    const { showError } = useError();
 
     const [playlists, setPlaylists] = useState([]);
     const [selectedId, setSelectedId] = useState(null);
@@ -26,11 +29,7 @@ function MyPlaylists({
     const refreshPlaylists = useCallback(() => {
         if (!user || !accessToken) return;
 
-        fetch(`${API_URL}/api/playlists/my`, {
-            headers: {
-                "Authorization": `Bearer ${accessToken}`
-            }
-        })
+        authFetch(`${API_URL}/api/playlists/my`)
             .then(res => res.json())
             .then(data => {
                 setPlaylists(data);
@@ -41,9 +40,12 @@ function MyPlaylists({
                     if (!exists) setSelectedId(null);
                 }
             })
-            .catch(err => console.error("Ошибка загрузки плейлистов:", err));
+            .catch(err => {
+                console.error("Ошибка загрузки плейлистов:", err);
+                showError("Не удалось загрузить ваши плейлисты");
+            });
 
-    }, [user, accessToken, selectedId]);
+    }, [user, accessToken, selectedId, showError]);
 
     // ⭐ Загружаем плейлисты при входе
     useEffect(() => {
@@ -52,7 +54,12 @@ function MyPlaylists({
 
     useEffect(() => {
         const intervalId = setInterval(refreshPlaylists, 12000);
-        return () => clearInterval(intervalId);
+        const handleLibraryChanged = () => refreshPlaylists();
+        window.addEventListener("library:changed", handleLibraryChanged);
+        return () => {
+            clearInterval(intervalId);
+            window.removeEventListener("library:changed", handleLibraryChanged);
+        };
     }, [refreshPlaylists]);
 
     const selected = playlists.find(p => p.id === selectedId) || null;
@@ -76,11 +83,10 @@ function MyPlaylists({
         if (!name?.trim() || !accessToken) return;
 
         try {
-            const res = await fetch(`${API_URL}/api/playlists`, {
+            const res = await authFetch(`${API_URL}/api/playlists`, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${accessToken}`
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                     title: name.trim(),
@@ -97,6 +103,7 @@ function MyPlaylists({
             setSelectedId(data.id);
         } catch (err) {
             console.error("Ошибка создания плейлиста:", err);
+            showError(err.message || "Не удалось создать плейлист");
         }
     };
 

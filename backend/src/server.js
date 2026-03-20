@@ -11,6 +11,10 @@ const { PrismaClient } = require('@prisma/client');
 const app = express();
 const prisma = new PrismaClient();
 const FAVORITES_TITLE = 'Любимые треки';
+const MAX_AUDIO_SIZE = 20 * 1024 * 1024;
+const MAX_COVER_SIZE = 5 * 1024 * 1024;
+const ALLOWED_AUDIO_MIME = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/mp4'];
+const ALLOWED_IMAGE_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
 
 const uploadsRoot = path.join(__dirname, '../uploads');
 ['audio', 'covers', 'other'].forEach((dir) => {
@@ -30,6 +34,17 @@ function generateAccessToken(user) {
 }
 function generateRefreshToken(user) {
   return jwt.sign({ id: user.id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+}
+
+async function getUserFromRefreshToken(refreshToken) {
+  const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+  const user = await prisma.user.findUnique({ where: { id: payload.id } });
+
+  if (!user || user.refreshToken !== refreshToken) {
+    throw new Error('Invalid token');
+  }
+
+  return user;
 }
 
 async function authenticate(req, res, next) {
@@ -59,7 +74,23 @@ const storage = multer.diskStorage({
     cb(null, unique + path.extname(file.originalname));
   }
 });
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: MAX_AUDIO_SIZE
+  },
+  fileFilter(req, file, cb) {
+    if (file.fieldname === 'audio' && !ALLOWED_AUDIO_MIME.includes(file.mimetype)) {
+      return cb(new Error('Audio must be MP3, WAV, OGG or M4A'));
+    }
+
+    if (file.fieldname === 'cover' && !ALLOWED_IMAGE_MIME.includes(file.mimetype)) {
+      return cb(new Error('Cover must be JPG, PNG or WEBP'));
+    }
+
+    cb(null, true);
+  }
+});
 
 function containsInsensitive(field, value) {
   return {
@@ -67,6 +98,81 @@ function containsInsensitive(field, value) {
       contains: value
     }
   };
+}
+
+function parseTrackFilters(query, scope = 'public') {
+  const search = (query.search || '').trim();
+  const sortBy = ['title', 'createdAt'].includes(query.sortBy) ? query.sortBy : 'createdAt';
+  const sortOrder = query.sortOrder === 'asc' ? 'asc' : 'desc';
+  const type = (query.type || 'all').trim();
+  const filters = search
+    ? {
+        OR: [
+          containsInsensitive('title', search),
+          containsInsensitive('artist', search)
+        ]
+      }
+    : {};
+
+  if (scope === 'my') {
+    if (type === 'public') filters.isPublic = true;
+    if (type === 'private') filters.isPublic = false;
+  }
+
+  if (scope === 'public') {
+    if (type === 'seeded') filters.userId = null;
+    if (type === 'uploaded') {
+      filters.userId = { not: null };
+      filters.isPublic = true;
+    }
+  }
+
+  return {
+    filters,
+    orderBy: { [sortBy]: sortOrder }
+  };
+}
+
+function validateTrackPayload({ title, artist }) {
+  if (!title?.trim()) {
+    return 'Title is required';
+  }
+
+  if (!artist?.trim()) {
+    return 'Artist is required';
+  }
+
+  return null;
+}
+
+function mapUser(user) {
+  return {
+    id: user.id,
+    email: user.email,
+    timeZone: user.timeZone,
+    isAdmin: !!user.isAdmin
+  };
+}
+
+function removeFileIfExists(file) {
+  if (!file?.path) return;
+
+  fs.promises.unlink(file.path).catch(() => {});
+}
+
+function ensureUploadSizes(files) {
+  const audioFile = files?.audio?.[0];
+  const coverFile = files?.cover?.[0];
+
+  if (audioFile?.size > MAX_AUDIO_SIZE) {
+    removeFileIfExists(audioFile);
+    throw new Error('Audio file is too large. Max size is 20 MB');
+  }
+
+  if (coverFile?.size > MAX_COVER_SIZE) {
+    removeFileIfExists(coverFile);
+    throw new Error('Cover image is too large. Max size is 5 MB');
+  }
 }
 
 // ------------------------------------------------------------------
@@ -91,7 +197,7 @@ app.post('/api/auth/register', async (req, res) => {
     const token = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
     await prisma.user.update({ where: { id: user.id }, data: { refreshToken } });
-    res.json({ id: user.id, token, refreshToken });
+    res.json({ id: user.id, token, refreshToken, user: mapUser(user) });
   } catch (err) {
     if (err.code === 'P2002') {
       return res.status(400).json({ error: 'Email already registered' });
@@ -113,76 +219,79 @@ app.post('/api/auth/login', async (req, res) => {
   const token = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
   await prisma.user.update({ where: { id: user.id }, data: { refreshToken } });
-  res.json({ token, refreshToken });
+  res.json({ token, refreshToken, user: mapUser(user) });
 });
 
 app.post('/api/auth/refresh', async (req, res) => {
   const { refreshToken } = req.body;
   if (!refreshToken) return res.status(400).json({ error: 'refreshToken required' });
   try {
-    const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-    const user = await prisma.user.findUnique({ where: { id: payload.id } });
-    if (!user || user.refreshToken !== refreshToken) {
-      throw new Error('Invalid token');
-    }
+    const user = await getUserFromRefreshToken(refreshToken);
     const token = generateAccessToken(user);
-    res.json({ token });
+    const newRefreshToken = generateRefreshToken(user);
+    await prisma.user.update({ where: { id: user.id }, data: { refreshToken: newRefreshToken } });
+    res.json({
+      token,
+      refreshToken: newRefreshToken,
+      user: mapUser(user)
+    });
   } catch (err) {
     return res.status(401).json({ error: 'Invalid refresh token' });
   }
 });
 
-app.post('/api/auth/logout', authenticate, async (req, res) => {
-  // clear stored refresh token
-  await prisma.user.update({ where: { id: req.user.id }, data: { refreshToken: null } });
+app.post('/api/auth/logout', async (req, res) => {
+  const auth = req.headers.authorization || '';
+  const accessToken = auth.replace(/^Bearer\s+/i, '');
+  const { refreshToken } = req.body || {};
+
+  try {
+    if (refreshToken) {
+      const user = await getUserFromRefreshToken(refreshToken);
+      await prisma.user.update({ where: { id: user.id }, data: { refreshToken: null } });
+      return res.json({ success: true });
+    }
+
+    if (accessToken) {
+      const payload = jwt.verify(accessToken, process.env.JWT_SECRET);
+      await prisma.user.update({ where: { id: payload.id }, data: { refreshToken: null } });
+      return res.json({ success: true });
+    }
+  } catch (err) {
+    return res.json({ success: true });
+  }
+
   res.json({ success: true });
 });
 
 app.get('/api/auth/me', authenticate, (req, res) => {
-  const { id, email, timeZone } = req.user;
-  res.json({ id, email, timeZone });
+  res.json(mapUser(req.user));
 });
 
 // ------------------------------------------------------------------
 // tracks
 app.get('/api/tracks', async (req, res) => {
-  const search = (req.query.search || '').trim();
+  const { filters, orderBy } = parseTrackFilters(req.query, 'public');
   const tracks = await prisma.track.findMany({
     where: {
       deletedAt: null,
       OR: [{ userId: null }, { isPublic: true }],
-      ...(search
-        ? {
-            AND: [{
-              OR: [
-                containsInsensitive('title', search),
-                containsInsensitive('artist', search)
-              ]
-            }]
-          }
-        : {})
+      ...filters
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy
   });
   res.json(tracks);
 });
 
 app.get('/api/tracks/my', authenticate, async (req, res) => {
-  const search = (req.query.search || '').trim();
+  const { filters, orderBy } = parseTrackFilters(req.query, 'my');
   const tracks = await prisma.track.findMany({
     where: {
       userId: req.user.id,
       deletedAt: null,
-      ...(search
-        ? {
-            OR: [
-              containsInsensitive('title', search),
-              containsInsensitive('artist', search)
-            ]
-          }
-        : {})
+      ...filters
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy
   });
   res.json(tracks);
 });
@@ -191,9 +300,14 @@ app.post('/api/tracks/upload', authenticate, upload.fields([{ name: 'audio' }, {
   async (req, res) => {
     try {
       const { title, artist } = req.body;
-      if (!title || !artist || !req.files?.audio?.length) {
-        return res.status(400).json({ error: 'title, artist and audio file required' });
+      const payloadError = validateTrackPayload({ title, artist });
+
+      if (payloadError || !req.files?.audio?.length) {
+        return res.status(400).json({ error: payloadError || 'title, artist and audio file required' });
       }
+
+      ensureUploadSizes(req.files);
+
       const audioPath = `/uploads/audio/${req.files.audio[0].filename}`;
       const coverPath = req.files.cover ? `/uploads/covers/${req.files.cover[0].filename}` : null;
       const track = await prisma.track.create({
@@ -219,8 +333,14 @@ app.put('/api/tracks/:id', authenticate, async (req, res) => {
   const { title, artist, isPublic } = req.body;
   const data = {};
 
-  if (typeof title === 'string' && title.trim()) data.title = title.trim();
-  if (typeof artist === 'string' && artist.trim()) data.artist = artist.trim();
+  if (typeof title === 'string') {
+    if (!title.trim()) return res.status(400).json({ error: 'Title is required' });
+    data.title = title.trim();
+  }
+  if (typeof artist === 'string') {
+    if (!artist.trim()) return res.status(400).json({ error: 'Artist is required' });
+    data.artist = artist.trim();
+  }
   if (typeof isPublic === 'boolean') data.isPublic = isPublic;
 
   if (Object.keys(data).length === 0) {
@@ -250,13 +370,20 @@ app.put('/api/tracks/:id/details', authenticate, upload.fields([{ name: 'cover',
   const { title, artist, isPublic } = req.body;
   const data = {};
 
-  if (typeof title === 'string' && title.trim()) data.title = title.trim();
-  if (typeof artist === 'string' && artist.trim()) data.artist = artist.trim();
+  if (typeof title === 'string') {
+    if (!title.trim()) return res.status(400).json({ error: 'Title is required' });
+    data.title = title.trim();
+  }
+  if (typeof artist === 'string') {
+    if (!artist.trim()) return res.status(400).json({ error: 'Artist is required' });
+    data.artist = artist.trim();
+  }
   if (typeof isPublic === 'string') data.isPublic = isPublic === 'true';
   if (typeof isPublic === 'boolean') data.isPublic = isPublic;
 
   const coverFile = req.files?.cover?.[0];
   if (coverFile) {
+    ensureUploadSizes(req.files);
     data.coverUrl = `/uploads/covers/${coverFile.filename}`;
   }
 
@@ -287,7 +414,11 @@ app.delete('/api/tracks/:id', authenticate, async (req, res) => {
 
   try {
     const existing = await prisma.track.findFirst({
-      where: { id, userId: req.user.id, deletedAt: null }
+      where: {
+        id,
+        deletedAt: null,
+        ...(req.user.isAdmin ? {} : { userId: req.user.id })
+      }
     });
 
     if (!existing) {
@@ -402,11 +533,11 @@ app.get('/api/playlists/public/:id', async (req, res) => {
 app.post('/api/playlists', authenticate, async (req, res) => {
   try {
     const { title, description } = req.body;
-    if (!title) return res.status(400).json({ error: 'title required' });
+    if (!title?.trim()) return res.status(400).json({ error: 'title required' });
     const pl = await prisma.playlist.create({
       data: {
-        title,
-        description: description || null,
+        title: title.trim(),
+        description: description?.trim() || null,
         coverUrl: null,
         isFavorites: false,
         userId: req.user.id
@@ -419,8 +550,9 @@ app.post('/api/playlists', authenticate, async (req, res) => {
   }
 });
 
-app.get('/api/playlists/:id', authenticate, async (req, res) => {
+app.get('/api/playlists/:id', authenticate, async (req, res, next) => {
   const { id } = req.params;
+  if (id === 'favorites') return next();
   const pl = await prisma.playlist.findUnique({
     where: { id },
     include: {
@@ -449,7 +581,11 @@ app.put('/api/playlists/:id', authenticate, async (req, res) => {
   if (input.isPublic != null) update.isPublic = input.isPublic;
   try {
     const playlist = await prisma.playlist.findFirst({
-      where: { id, userId: req.user.id, deletedAt: null }
+      where: {
+        id,
+        deletedAt: null,
+        ...(req.user.isAdmin ? {} : { userId: req.user.id })
+      }
     });
 
     if (!playlist) {
@@ -500,13 +636,17 @@ app.put('/api/playlists/:id/details', authenticate, upload.fields([{ name: 'cove
   const { title, description, isPublic } = req.body;
   const data = {};
 
-  if (typeof title === 'string' && title.trim()) data.title = title.trim();
+  if (typeof title === 'string') {
+    if (!title.trim()) return res.status(400).json({ error: 'Title is required' });
+    data.title = title.trim();
+  }
   if (typeof description === 'string') data.description = description.trim() || null;
   if (typeof isPublic === 'string') data.isPublic = isPublic === 'true';
   if (typeof isPublic === 'boolean') data.isPublic = isPublic;
 
   const coverFile = req.files?.cover?.[0];
   if (coverFile) {
+    ensureUploadSizes(req.files);
     data.coverUrl = `/uploads/covers/${coverFile.filename}`;
   }
 
@@ -624,6 +764,98 @@ app.post('/api/playlists/favorites/tracks', authenticate, async (req, res) => {
   }
 });
 
+app.get('/api/playlists/favorites', authenticate, async (req, res) => {
+  const search = (req.query.search || '').trim();
+  const sortBy = ['title', 'createdAt'].includes(req.query.sortBy) ? req.query.sortBy : 'createdAt';
+  const sortOrder = req.query.sortOrder === 'asc' ? 'asc' : 'desc';
+  const type = (req.query.type || 'all').trim();
+
+  let favorites = await prisma.playlist.findFirst({
+    where: { userId: req.user.id, isFavorites: true, deletedAt: null },
+    include: {
+      tracks: {
+        where: { deletedAt: null },
+        orderBy: { order: 'asc' },
+        include: { track: true }
+      }
+    }
+  });
+
+  if (!favorites) {
+    favorites = await prisma.playlist.create({
+      data: {
+        title: FAVORITES_TITLE,
+        description: 'Автоматически созданный плейлист избранного',
+        coverUrl: null,
+        isFavorites: true,
+        userId: req.user.id
+      },
+      include: {
+        tracks: {
+          where: { deletedAt: null },
+          orderBy: { order: 'asc' },
+          include: { track: true }
+        }
+      }
+    });
+  }
+
+  let tracks = favorites.tracks.map((item) => item.track).filter((track) => {
+    const matchesSearch = !search
+      || track.title?.toLowerCase().includes(search.toLowerCase())
+      || track.artist?.toLowerCase().includes(search.toLowerCase());
+
+    if (!matchesSearch) return false;
+    if (type === 'seeded') return track.userId == null;
+    if (type === 'uploaded') return track.userId != null;
+    if (type === 'public') return track.isPublic;
+    if (type === 'private') return !track.isPublic;
+    return true;
+  });
+
+  tracks = tracks.sort((a, b) => {
+    if (sortBy === 'title') {
+      const compared = a.title.localeCompare(b.title, 'ru', { sensitivity: 'base' });
+      return sortOrder === 'asc' ? compared : -compared;
+    }
+
+    const compared = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    return sortOrder === 'asc' ? compared : -compared;
+  });
+
+  res.json({
+    ...favorites,
+    tracks
+  });
+});
+
+app.delete('/api/playlists/favorites/tracks/:trackId', authenticate, async (req, res) => {
+  const { trackId } = req.params;
+
+  const favorites = await prisma.playlist.findFirst({
+    where: { userId: req.user.id, isFavorites: true, deletedAt: null }
+  });
+
+  if (!favorites) {
+    return res.status(404).json({ error: 'Favorites playlist not found' });
+  }
+
+  const updated = await prisma.playlistTrack.updateMany({
+    where: {
+      playlistId: favorites.id,
+      trackId,
+      deletedAt: null
+    },
+    data: { deletedAt: new Date() }
+  });
+
+  if (!updated.count) {
+    return res.status(404).json({ error: 'Track not found in favorites' });
+  }
+
+  res.json({ success: true });
+});
+
 app.post('/api/playlist-tracks', authenticate, async (req, res) => {
   const { playlistId, trackId, order } = req.body;
   try {
@@ -692,6 +924,22 @@ app.post('/api/playlist-tracks', authenticate, async (req, res) => {
 });
 
 // ------------------------------------------------------------------
+
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'Uploaded file is too large' });
+    }
+
+    return res.status(400).json({ error: err.message || 'Upload error' });
+  }
+
+  if (err) {
+    return res.status(400).json({ error: err.message || 'Request error' });
+  }
+
+  next();
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

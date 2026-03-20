@@ -11,11 +11,11 @@ console.log("API_URL =", import.meta.env.VITE_API_URL);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AuthProvider>
-      <ErrorProvider>
+    <ErrorProvider>
+      <AuthProvider>
         <App />
         <ErrorToast />
-      </ErrorProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </ErrorProvider>
   </StrictMode>
 );

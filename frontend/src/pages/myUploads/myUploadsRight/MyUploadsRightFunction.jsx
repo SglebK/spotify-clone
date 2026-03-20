@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { API_URL } from "../../../components/utils/api/config";
 import { fixUrl } from "../../../components/utils/fixUrl/fixUrl";
 import { useAuth } from "../../../context/auth/AuthContext";
+import { authFetch } from "../../../components/utils/api/authFetch.js";
+import { emitLibraryChanged } from "../../../components/utils/libraryEvents.js";
 
 export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTracks, setSelectedTrack) {
     const { accessToken } = useAuth();
@@ -20,11 +22,7 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
     const loadPlaylists = useCallback(() => {
         if (!accessToken) return Promise.resolve();
 
-        return fetch(`${API_URL}/api/playlists/my`, {
-            headers: {
-                "Authorization": `Bearer ${accessToken}`
-            }
-        })
+        return authFetch(`${API_URL}/api/playlists/my`)
             .then(async (res) => {
                 if (!res.ok) {
                     throw new Error("Не удалось загрузить плейлисты");
@@ -69,11 +67,8 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
             formData.append("cover", coverFile);
         }
 
-        fetch(`${API_URL}/api/tracks/${track.id}/details`, {
+        authFetch(`${API_URL}/api/tracks/${track.id}/details`, {
             method: "PUT",
-            headers: {
-                "Authorization": `Bearer ${accessToken}`
-            },
             body: formData
         })
             .then(async (res) => {
@@ -95,17 +90,14 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
                 console.error("Ошибка редактирования трека:", err);
                 setPlaylistMessage(err.message || "Не удалось обновить трек");
             });
-    }, [track, title, artist, isPublic, coverFile, accessToken, setMyTracks, setSelectedTrack]);
+    }, [track, title, artist, isPublic, coverFile, setMyTracks, setSelectedTrack]);
 
     const deleteTrack = useCallback(() => {
         if (!track) return;
         if (!confirm(`Удалить трек "${track.title}"?`)) return;
 
-        fetch(`${API_URL}/api/tracks/${track.id}`, {
+        authFetch(`${API_URL}/api/tracks/${track.id}`, {
             method: "DELETE",
-            headers: {
-                "Authorization": `Bearer ${accessToken}`
-            }
         })
             .then(async (res) => {
                 if (!res.ok) {
@@ -119,17 +111,16 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
                 setTracks((prev) => prev.filter((item) => item.id !== track.id));
             })
             .catch((err) => console.error("Ошибка удаления трека:", err));
-    }, [track, accessToken, setMyTracks, setSelectedTrack, setTracks]);
+    }, [track, setMyTracks, setSelectedTrack, setTracks]);
 
     const togglePublic = useCallback(() => {
         if (!track) return;
         const newValue = !isPublic;
 
-        fetch(`${API_URL}/api/tracks/${track.id}`, {
+        authFetch(`${API_URL}/api/tracks/${track.id}`, {
             method: "PUT",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${accessToken}`
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({ isPublic: newValue })
         })
@@ -147,16 +138,15 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
                 setSelectedTrack(updatedTrack);
             })
             .catch((err) => console.error("Ошибка смены публичности:", err));
-    }, [track, isPublic, accessToken, setMyTracks, setSelectedTrack]);
+    }, [track, isPublic, setMyTracks, setSelectedTrack]);
 
     const addToFavorites = useCallback(() => {
         if (!track) return;
 
-        fetch(`${API_URL}/api/playlists/favorites/tracks`, {
+        authFetch(`${API_URL}/api/playlists/favorites/tracks`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${accessToken}`
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({ trackId: track.id })
         })
@@ -173,12 +163,13 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
                 } else {
                     setPlaylistMessage("Трек уже есть в любимых");
                 }
+                emitLibraryChanged("favorites");
             })
             .catch((err) => {
                 console.error("Ошибка добавления в любимые:", err);
                 setPlaylistMessage(err.message || "Ошибка добавления в любимые");
             });
-    }, [track, accessToken]);
+    }, [track]);
 
     const addToQueue = useCallback(() => {
         if (!track) return;
@@ -190,7 +181,6 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
         };
 
         let wasAdded = false;
-        let shouldStartPlayback = false;
 
         setTracks((prev) => {
             if (prev.some((item) => item.id === preparedTrack.id)) {
@@ -198,7 +188,6 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
             }
 
             wasAdded = true;
-            shouldStartPlayback = prev.length === 0;
             return [...prev, preparedTrack];
         });
 
@@ -207,12 +196,8 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
             return;
         }
 
-        if (shouldStartPlayback && onPlayTrack) {
-            onPlayTrack(preparedTrack);
-        }
-
         setPlaylistMessage("Трек добавлен в очередь плеера");
-    }, [track, setTracks, onPlayTrack]);
+    }, [track, setTracks]);
 
     // Shared helper avoids duplicating the same POST logic in both playlist actions.
     const addTrackToPlaylist = useCallback(async (playlistId) => {
@@ -220,11 +205,10 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
             throw new Error("Сначала выберите плейлист");
         }
 
-        const response = await fetch(`${API_URL}/api/playlist-tracks`, {
+        const response = await authFetch(`${API_URL}/api/playlist-tracks`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${accessToken}`
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
                 playlistId,
@@ -239,7 +223,7 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
         }
 
         return data;
-    }, [track, accessToken]);
+    }, [track]);
 
     const addToPlaylist = useCallback(async (playlistId) => {
         setPlaylistSaving(true);
@@ -256,6 +240,7 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
 
             setIsPlaylistPickerOpen(false);
             await loadPlaylists();
+            emitLibraryChanged("playlists");
         } catch (err) {
             console.error("Ошибка добавления в плейлист:", err);
             setPlaylistMessage(err.message || "Не удалось добавить трек в плейлист");
@@ -274,11 +259,10 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
         setPlaylistSaving(true);
 
         try {
-            const createRes = await fetch(`${API_URL}/api/playlists`, {
+            const createRes = await authFetch(`${API_URL}/api/playlists`, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${accessToken}`
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                     title: cleanTitle,
@@ -296,13 +280,14 @@ export function useMyUploadsRightLogic(track, onPlayTrack, setTracks, setMyTrack
             setPlaylistMessage(`Создан плейлист "${cleanTitle}" и трек сохранён`);
             setIsPlaylistPickerOpen(false);
             await loadPlaylists();
+            emitLibraryChanged("playlists");
         } catch (err) {
             console.error("Ошибка создания плейлиста:", err);
             setPlaylistMessage(err.message || "Не удалось создать плейлист");
         } finally {
             setPlaylistSaving(false);
         }
-    }, [accessToken, addTrackToPlaylist, loadPlaylists]);
+    }, [addTrackToPlaylist, loadPlaylists]);
 
     return {
         isPublic,

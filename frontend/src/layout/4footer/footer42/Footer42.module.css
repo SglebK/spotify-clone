@@ -27,6 +27,44 @@
   font-family: inherit;
 }
 
+.playBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.favoriteBtn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.05);
+}
+
+.favoriteIcon {
+  font-size: 22px;
+  line-height: 1;
+  color: #b7bcc4;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.favoriteActive {
+  opacity: 1;
+  border-color: rgba(29, 185, 84, 0.48);
+  background: rgba(29, 185, 84, 0.1);
+}
+
+.favoriteActive .favoriteIcon {
+  color: #1DB954;
+  text-shadow: 0 0 10px rgba(29, 185, 84, 0.25);
+}
+
+.favoriteBtn:hover .favoriteIcon {
+  transform: scale(1.06);
+}
+
 .smallBtn {
   font-size: 16px;
 }
@@ -71,6 +109,19 @@
   width: 25px;
   height: 25px;
   object-fit: contain;
+}
+
+.symbolBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  font-size: 20px;
+}
+
+.iconPrev {
+  transform: rotate(180deg);
 }
 
 /* --- Кнопка скорости --- */

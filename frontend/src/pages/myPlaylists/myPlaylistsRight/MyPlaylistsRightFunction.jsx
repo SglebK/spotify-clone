@@ -3,10 +3,13 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../../context/auth/AuthContext";
 import { API_URL } from "../../../components/utils/api/config";
+import { authFetch } from "../../../components/utils/api/authFetch.js";
+import { useError } from "../../../context/error/ErrorContext.jsx";
 
 export function useMyPlaylistsRightLogic(playlist, setPlaylists) {
 
     const { accessToken } = useAuth();
+    const { showError } = useError();
     const [tracks, setTracks] = useState([]);
 
     // Локальные состояния, чтобы UI обновлялся сразу
@@ -26,14 +29,15 @@ export function useMyPlaylistsRightLogic(playlist, setPlaylists) {
         setCoverFile(null);
 
         // загрузка треков
-        fetch(`${API_URL}/api/playlists/${playlist.id}`, {
-            headers: { "Authorization": `Bearer ${accessToken}` }
-        })
+        authFetch(`${API_URL}/api/playlists/${playlist.id}`)
             .then(res => res.json())
             .then(data => setTracks(data.tracks || []))
-            .catch(err => console.error("Ошибка загрузки треков:", err));
+            .catch(err => {
+                console.error("Ошибка загрузки треков:", err);
+                showError("Не удалось загрузить треки плейлиста");
+            });
 
-    }, [playlist, accessToken]);
+    }, [playlist, accessToken, showError]);
 
     useEffect(() => {
         if (!message) return;
@@ -57,11 +61,8 @@ export function useMyPlaylistsRightLogic(playlist, setPlaylists) {
         }
 
         try {
-            const res = await fetch(`${API_URL}/api/playlists/${playlist.id}/details`, {
+            const res = await authFetch(`${API_URL}/api/playlists/${playlist.id}/details`, {
                 method: "PUT",
-                headers: {
-                    "Authorization": `Bearer ${accessToken}`
-                },
                 body: formData
             });
 
@@ -77,6 +78,7 @@ export function useMyPlaylistsRightLogic(playlist, setPlaylists) {
         } catch (err) {
             console.error(err);
             setMessage(err.message || "Ошибка обновления плейлиста");
+            showError(err.message || "Ошибка обновления плейлиста");
         }
     };
 
@@ -85,15 +87,15 @@ export function useMyPlaylistsRightLogic(playlist, setPlaylists) {
         if (!confirm("Удалить плейлист?")) return;
 
         try {
-            await fetch(`${API_URL}/api/playlists/${playlist.id}`, {
-                method: "DELETE",
-                headers: { "Authorization": `Bearer ${accessToken}` }
+            await authFetch(`${API_URL}/api/playlists/${playlist.id}`, {
+                method: "DELETE"
             });
 
             setPlaylists(prev => prev.filter(p => p.id !== playlist.id));
 
         } catch (err) {
             console.error("Ошибка удаления плейлиста:", err);
+            showError("Не удалось удалить плейлист");
         }
     };
 
@@ -102,11 +104,10 @@ export function useMyPlaylistsRightLogic(playlist, setPlaylists) {
         try {
             const newValue = !isPublic;
 
-            const res = await fetch(`${API_URL}/api/playlists/${playlist.id}`, {
+            const res = await authFetch(`${API_URL}/api/playlists/${playlist.id}`, {
                 method: "PUT",
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${accessToken}`
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ IsPublic: newValue }) // ← backend ждёт IsPublic
             });
@@ -125,6 +126,7 @@ export function useMyPlaylistsRightLogic(playlist, setPlaylists) {
 
         } catch (err) {
             console.error(err);
+            showError("Не удалось изменить приватность плейлиста");
         }
     };
 

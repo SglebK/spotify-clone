@@ -4,6 +4,9 @@ import styles from "./MyUploads.module.css";
 import { useAuth } from "../../context/auth/AuthContext";
 import { API_URL } from "../../components/utils/api/config";
 import { fixUrl } from "../../components/utils/fixUrl/fixUrl";
+import TrackFilters from "../../components/trackFilters/TrackFilters.jsx";
+import { useError } from "../../context/error/ErrorContext.jsx";
+import { authFetch } from "../../components/utils/api/authFetch.js";
 
 import MyUploadsLeft from "./myUploadsLeft/MyUploadsLeft.jsx";
 import MyUploadsRight from "./myUploadsRight/MyUploadsRight.jsx";
@@ -11,23 +14,30 @@ import MyUploadsRight from "./myUploadsRight/MyUploadsRight.jsx";
 function MyUploads({ onPlayTrack, setTracks, searchQuery }) {
 
     const { accessToken } = useAuth();
+    const { showError } = useError();
 
     // ⭐ Локальные загруженные треки (НЕ плейлист футера!)
     const [myTracks, setMyTracks] = useState([]);
 
     const [loading, setLoading] = useState(true);
     const [selectedTrack, setSelectedTrack] = useState(null);
+    const [sortBy, setSortBy] = useState("createdAt");
+    const [sortOrder, setSortOrder] = useState("desc");
+    const [type, setType] = useState("all");
 
     useEffect(() => {
         let active = true;
 
         const load = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/tracks/my`, {
-                    headers: {
-                        "Authorization": `Bearer ${accessToken}`
-                    }
+                const params = new URLSearchParams({
+                    search: searchQuery?.trim() || "",
+                    sortBy,
+                    sortOrder,
+                    type
                 });
+
+                const res = await authFetch(`${API_URL}/api/tracks/my?${params.toString()}`);
 
                 const data = await res.json();
 
@@ -40,6 +50,7 @@ function MyUploads({ onPlayTrack, setTracks, searchQuery }) {
 
             } catch (err) {
                 console.error("Ошибка загрузки:", err);
+                showError("Не удалось загрузить ваши треки");
             } finally {
                 if (active) setLoading(false);
             }
@@ -52,7 +63,7 @@ function MyUploads({ onPlayTrack, setTracks, searchQuery }) {
             active = false;
             clearInterval(intervalId);
         };
-    }, [accessToken]);
+    }, [accessToken, searchQuery, sortBy, sortOrder, type, showError]);
 
     const handlePlayTrack = (track) => {
         if (!track) return;
@@ -66,21 +77,30 @@ function MyUploads({ onPlayTrack, setTracks, searchQuery }) {
 
     return (
         <div className={styles.grid3}>
+            <TrackFilters
+                title="Ваши треки"
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                sortOrder={sortOrder}
+                setSortOrder={setSortOrder}
+                type={type}
+                setType={setType}
+                typeOptions={[
+                    { value: "all", label: "Все" },
+                    { value: "public", label: "Публичные" },
+                    { value: "private", label: "Приватные" }
+                ]}
+            />
+
             <div className={styles.grid31}>
 
                 {/* ⭐ Левый список — только загруженные треки */}
                 <MyUploadsLeft
-                    myTracks={myTracks.filter((track) => {
-                        const query = searchQuery?.trim().toLowerCase();
-                        if (!query) return true;
-                        return (
-                            track.title?.toLowerCase().includes(query) ||
-                            track.artist?.toLowerCase().includes(query)
-                        );
-                    })}
+                    myTracks={myTracks}
                     loading={loading}
                     selectedTrack={selectedTrack}
                     onSelectTrack={setSelectedTrack}
+                    onPlayTrack={handlePlayTrack}
                 />
 
                 {/* ⭐ Правая панель — добавляет трек в плейлист футера */}

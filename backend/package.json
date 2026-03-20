@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "seed:demo": "node scripts/seedDemoTracks.js"
+    "seed:demo": "node scripts/seedDemoTracks.js",
+    "seed:full": "node scripts/seedDemoData.js"
   },
   "keywords": [],
   "author": "",

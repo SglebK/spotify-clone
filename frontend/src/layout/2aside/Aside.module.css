@@ -9,7 +9,7 @@ ul {
 /* Контейнер */
 .grid2 {
   display: grid;
-  grid-template-rows: 40px 40px 40px 10px 40px 10px 40px 40px 40px;
+  grid-template-rows: 40px 40px 40px 10px 40px 10px 40px 40px 40px 40px;
   grid-template-areas:
     'grid21'
     'grid22'
@@ -19,7 +19,8 @@ ul {
     'divider2'
     'grid25'
     'grid26'
-    'grid27';
+    'grid27'
+    'grid28';
   padding: 20px;
   row-gap: 10px;
   height: 100%;
@@ -48,13 +49,17 @@ ul {
 .grid27 {
   grid-area: grid27;
 }
+.grid28 {
+  grid-area: grid28;
+}
 .grid21,
 .grid22,
 .grid23,
 .grid24,
 .grid25,
 .grid26,
-.grid27{
+.grid27,
+.grid28{
   font-size: 14px;
 }
 
@@ -96,7 +101,8 @@ ul {
   .grid24,
   .grid25,
   .grid26,
-  .grid27 {
+  .grid27,
+  .grid28 {
     flex: 0 0 auto;
     min-width: max-content;
     padding: 8px 14px;
@@ -118,7 +124,8 @@ ul {
   .grid24,
   .grid25,
   .grid26,
-  .grid27 {
+  .grid27,
+  .grid28 {
     font-size: 13px;
     padding: 7px 12px;
   }

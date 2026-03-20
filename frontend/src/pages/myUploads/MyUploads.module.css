@@ -8,8 +8,10 @@
     background: var(--bg);
     color: var(--text);
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 18px;
     padding: 24px;
     box-sizing: border-box;
     transition: background 0.3s, color 0.3s;

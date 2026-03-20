@@ -3,11 +3,12 @@ import React from "react";
 import styles from "./MyUploadsLeft.module.css";
 import { fixUrl } from "../../../components/utils/fixUrl/fixUrl";
 
-function MyUploadsLeft({ myTracks, loading, selectedTrack, onSelectTrack }) {
+function MyUploadsLeft({ myTracks, loading, selectedTrack, onSelectTrack, onPlayTrack }) {
     return (
         <div className={styles.left}>
 
             <h2 className={styles.title}>Мои загруженные треки</h2>
+            <p className={styles.helper}>Открывайте трек кнопкой ниже, чтобы редактировать его справа.</p>
 
             {loading && <p className={styles.info}>Загрузка...</p>}
 
@@ -25,7 +26,6 @@ function MyUploadsLeft({ myTracks, loading, selectedTrack, onSelectTrack }) {
                                     ? styles.active
                                     : ""
                             }`}
-                            onClick={() => onSelectTrack(t)}
                         >
                             <img
                                 src={fixUrl(t.coverUrl) || "/default-cover.png"}
@@ -35,6 +35,22 @@ function MyUploadsLeft({ myTracks, loading, selectedTrack, onSelectTrack }) {
                             <div className={styles.trackText}>
                                 <span className={styles.trackTitle}>{t.title}</span>
                                 <span className={styles.trackArtist}>{t.artist}</span>
+                            </div>
+                            <div className={styles.actions}>
+                                <button
+                                    type="button"
+                                    className={styles.actionButton}
+                                    onClick={() => onSelectTrack(t)}
+                                >
+                                    Открыть
+                                </button>
+                                <button
+                                    type="button"
+                                    className={styles.actionButton}
+                                    onClick={() => onPlayTrack?.(t)}
+                                >
+                                    Слушать
+                                </button>
                             </div>
                         </li>
                     ))}

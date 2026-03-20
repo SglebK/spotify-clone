@@ -114,6 +114,12 @@
     width: auto !important;
 }
 
+.deleteButton {
+    background: #d9534f !important;
+    color: #fff !important;
+    border-color: #d9534f !important;
+}
+
 .trackList {
     display: grid;
     gap: 10px;

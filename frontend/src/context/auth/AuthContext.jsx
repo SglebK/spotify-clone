@@ -2,13 +2,35 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import api from "../../components/utils/api/axios";
+import { useError } from "../error/ErrorContext.jsx";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  const { showError } = useError();
   const [user, setUser] = useState(null);          // { id, email, timeZone }
   const [accessToken, setAccessToken] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const applyAuthData = ({ token, refreshToken, user: nextUser }) => {
+    if (token) {
+      setAccessToken(token);
+      window.__accessToken = token;
+    }
+
+    if (refreshToken) {
+      localStorage.setItem("refreshToken", refreshToken);
+    }
+
+    if (nextUser) {
+      setUser({
+        id: nextUser.id,
+        email: nextUser.email,
+        timeZone: nextUser.timeZone,
+        isAdmin: !!nextUser.isAdmin
+      });
+    }
+  };
 
   // ⭐ ЛОГАУТ
   const logout = async (navigate) => {
@@ -42,22 +64,7 @@ export function AuthProvider({ children }) {
     api
       .post("/api/auth/refresh", { refreshToken })
       .then((res) => {
-        const newToken = res.data.token;
-
-        setAccessToken(newToken);
-        window.__accessToken = newToken;
-
-        return api.get("/api/auth/me", {
-          headers: { Authorization: `Bearer ${newToken}` }
-        });
-      })
-      .then((res) => {
-        // ⭐ ВАЖНО: сохраняем user.id
-        setUser({
-          id: res.data.id,
-          email: res.data.email,
-          timeZone: res.data.timeZone
-        });
+        applyAuthData(res.data);
       })
       .catch(() => {
         logout();
@@ -65,28 +72,32 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    const handleTokenRefresh = (event) => {
+      applyAuthData(event.detail || {});
+    };
+
+    const handleSessionExpired = () => {
+      localStorage.removeItem("refreshToken");
+      window.__accessToken = null;
+      setAccessToken(null);
+      setUser(null);
+      showError("Сессия истекла. Войдите снова.");
+    };
+
+    window.addEventListener("auth:token-refreshed", handleTokenRefresh);
+    window.addEventListener("auth:session-expired", handleSessionExpired);
+
+    return () => {
+      window.removeEventListener("auth:token-refreshed", handleTokenRefresh);
+      window.removeEventListener("auth:session-expired", handleSessionExpired);
+    };
+  }, [showError]);
+
   // ⭐ ЛОГИН
   const login = async (email, password) => {
     const res = await api.post("/api/auth/login", { email, password });
-
-    const { token, refreshToken } = res.data;
-
-    // сохраняем токены
-    setAccessToken(token);
-    window.__accessToken = token;
-    localStorage.setItem("refreshToken", refreshToken);
-
-    // получаем профиль
-    const profile = await api.get("/api/auth/me", {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    // ⭐ сохраняем user.id
-    setUser({
-      id: profile.data.id,
-      email: profile.data.email,
-      timeZone: profile.data.timeZone
-    });
+    applyAuthData(res.data);
   };
 
   return (

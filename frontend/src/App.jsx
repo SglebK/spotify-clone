@@ -8,25 +8,70 @@ import Aside from './layout/2aside/Aside';
 import Navigator from './layout/3navigator/Navigator';
 import Footer from './layout/4footer/Footer';
 
+const PLAYER_TRACK_KEY = 'spotify-clone-current-track';
+const PLAYER_QUEUE_KEY = 'spotify-clone-player-queue';
+const PLAYER_NAME_KEY = 'spotify-clone-player-playlist-name';
+
+function readStoredValue(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function App() {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("theme") || "light";
   });
 
   // ⭐ Единый текущий трек
-  const [currentTrack, setCurrentTrack] = useState(null);
+  const [currentTrack, setCurrentTrackState] = useState(() => readStoredValue(PLAYER_TRACK_KEY, null));
 
   // ⭐ Единый плейлист для плеера и модалки
-  const [tracks, setTracks] = useState([]);
+  const [tracks, setTracks] = useState(() => readStoredValue(PLAYER_QUEUE_KEY, []));
 
   // ⭐ Единое название плейлиста (временного или сохранённого)
-  const [playlistName, setPlaylistName] = useState(null);
+  const [playlistName, setPlaylistName] = useState(() => readStoredValue(PLAYER_NAME_KEY, null));
   const [searchQuery, setSearchQuery] = useState("");
+
+  const setCurrentTrack = (nextTrack) => {
+    setCurrentTrackState(nextTrack || null);
+  };
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem(PLAYER_TRACK_KEY, JSON.stringify(currentTrack));
+  }, [currentTrack]);
+
+  useEffect(() => {
+    localStorage.setItem(PLAYER_QUEUE_KEY, JSON.stringify(tracks));
+  }, [tracks]);
+
+  useEffect(() => {
+    localStorage.setItem(PLAYER_NAME_KEY, JSON.stringify(playlistName));
+  }, [playlistName]);
+
+  useEffect(() => {
+    if (!currentTrack?.id) return;
+
+    setTracks((prev) => {
+      if (prev.some((item) => item.id === currentTrack.id)) {
+        return prev;
+      }
+
+      return [currentTrack, ...prev];
+    });
+  }, [currentTrack]);
+
+  const handlePlayTrack = (track) => {
+    setCurrentTrack(track || null);
+  };
 
   return (
     <Router>
@@ -51,7 +96,7 @@ function App() {
             setTheme={setTheme}
 
             // ⭐ Управление текущим треком
-            setTrack={setCurrentTrack}
+            setTrack={handlePlayTrack}
 
             // ⭐ Управление плейлистом
             tracks={tracks}
@@ -72,7 +117,7 @@ function App() {
           <Footer
             theme={theme}
             track={currentTrack}
-            setTrack={setCurrentTrack}
+            setTrack={handlePlayTrack}
             tracks={tracks}
             setTracks={setTracks}
             playlistName={playlistName}

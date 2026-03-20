@@ -19,6 +19,7 @@ import AllPlaylists from "../../pages/allPlaylists/AllPlaylists.jsx";
 import Premium from "../../pages/premium/Premium.jsx";
 import Help from "../../pages/help/Help.jsx";
 import SearchResults from "../../pages/searchResults/SearchResults.jsx";
+import Favorites from "../../pages/favorites/Favorites.jsx";
 
 function Navigator({ 
   theme, 
@@ -123,6 +124,20 @@ function Navigator({
                 tracks={tracks}          // плейлист футера
                 setTracks={setTracks}    // обновление плейлиста футера
                 searchQuery={searchQuery}
+              />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/favorites"
+          element={
+            <PrivateRoute>
+              <Favorites
+                onPlayTrack={setTrack}
+                tracks={tracks}
+                setTracks={setTracks}
+                setPlaylistName={setPlaylistName}
               />
             </PrivateRoute>
           }

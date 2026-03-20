@@ -6,29 +6,29 @@ import styles from './Footer.module.css';
 import Footer41 from './footer41/Footer41';
 import Footer42 from './footer42/Footer42';
 import Footer43 from './footer43/Footer43';
-
-import PlaylistModal from '../../pages/playlistModal/PlaylistModal';
+import QuickSaveModal from '../../components/quickSaveModal/QuickSaveModal.jsx';
 
 import { useAuth } from '../../context/auth/AuthContext';
 import { API_URL } from '../../components/utils/api/config';
 import Toast from '../../components/toast/Toast';
+import { authFetch } from '../../components/utils/api/authFetch.js';
+import { useError } from '../../context/error/ErrorContext.jsx';
+import { emitLibraryChanged } from '../../components/utils/libraryEvents.js';
 
 function Footer({ 
     theme, 
     track, 
     setTrack, 
-    tracks, 
-    setTracks, 
-    playlistName, 
-    setPlaylistName,
-    refreshPlaylists   // ⭐ теперь Footer получает refreshPlaylists
+    tracks
 }) {
 
     const { user, accessToken } = useAuth();
+    const { showError } = useError();
 
     const [volume, setVolume] = useState(0.1);
-    const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
+    const [favoriteTrackIds, setFavoriteTrackIds] = useState([]);
     const [userPlaylists, setUserPlaylists] = useState([]);
+    const [isQuickSaveOpen, setIsQuickSaveOpen] = useState(false);
     const [toast, setToast] = useState(null);
 
     const showToast = (message) => {
@@ -38,47 +38,76 @@ function Footer({
 
     useEffect(() => {
         if (!user || !accessToken) {
+            setFavoriteTrackIds([]);
             setUserPlaylists([]);
             return;
         }
 
         let active = true;
 
-        const loadPlaylists = () => {
-            fetch(`${API_URL}/api/playlists/my`, {
-                headers: {
-                    "Authorization": `Bearer ${accessToken}`
+        const loadLibrary = async () => {
+            try {
+                const [favoritesRes, playlistsRes] = await Promise.all([
+                    authFetch(`${API_URL}/api/playlists/favorites`),
+                    authFetch(`${API_URL}/api/playlists/my`)
+                ]);
+
+                const favoritesData = await favoritesRes.json();
+                const playlistsData = await playlistsRes.json();
+
+                if (!favoritesRes.ok) {
+                    throw new Error(favoritesData.error || "Не удалось загрузить любимые");
                 }
-            })
-                .then(async (res) => {
-                    if (!res.ok) {
-                        throw new Error("Не удалось загрузить плейлисты");
-                    }
-                    return res.json();
-                })
-                .then((data) => {
-                    if (active) setUserPlaylists(data);
-                })
-                .catch((err) => console.error("Ошибка загрузки плейлистов футера:", err));
+
+                if (!playlistsRes.ok) {
+                    throw new Error(playlistsData.error || "Не удалось загрузить плейлисты");
+                }
+
+                if (!active) return;
+
+                setFavoriteTrackIds((favoritesData.tracks || []).map((item) => item.id));
+                setUserPlaylists(playlistsData);
+            } catch (error) {
+                console.error("Ошибка загрузки библиотеки футера:", error);
+            }
         };
 
-        loadPlaylists();
-        const intervalId = setInterval(loadPlaylists, 12000);
+        const handleLibraryChanged = () => loadLibrary();
+
+        loadLibrary();
+        const intervalId = setInterval(loadLibrary, 12000);
+        window.addEventListener("library:changed", handleLibraryChanged);
 
         return () => {
             active = false;
             clearInterval(intervalId);
+            window.removeEventListener("library:changed", handleLibraryChanged);
         };
     }, [user, accessToken]);
-
-    const togglePlaylist = () => {
-        setIsPlaylistOpen(prev => !prev);
-    };
 
     const hasNextTrack = () => {
         if (!tracks || tracks.length === 0) return false;
         const currentIndex = tracks.findIndex(t => t.id === track?.id);
         return currentIndex !== -1 && currentIndex < tracks.length - 1;
+    };
+
+    const hasPreviousTrack = () => {
+        if (!tracks || tracks.length === 0) return false;
+        const currentIndex = tracks.findIndex(t => t.id === track?.id);
+        return currentIndex > 0;
+    };
+
+    const playPreviousTrack = () => {
+        if (!tracks || tracks.length === 0) return;
+
+        const currentIndex = tracks.findIndex((item) => item.id === track?.id);
+
+        if (currentIndex > 0) {
+            setTrack(tracks[currentIndex - 1]);
+            return;
+        }
+
+        setTrack(tracks[0]);
     };
 
     const playNextTrack = () => {
@@ -101,112 +130,107 @@ function Footer({
         setTrack(tracks[0]);
     };
 
-    const savePlaylist = async (name, tracksToSave) => {
-        if (!user || !accessToken) return;
+    const saveTrackToPlaylist = async (playlistId) => {
+        if (!track?.id || !playlistId) return;
+
+        const favoritesPlaylist = userPlaylists.find((item) => item.isFavorites);
+        const isFavoritesTarget = playlistId === favoritesPlaylist?.id;
 
         try {
-            const createRes = await fetch(`${API_URL}/api/playlists`, {
+            if (isFavoritesTarget) {
+                const res = await authFetch(`${API_URL}/api/playlists/favorites/tracks`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ trackId: track.id })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || "Не удалось добавить в любимые");
+                }
+
+                setFavoriteTrackIds((prev) => (prev.includes(track.id) ? prev : [...prev, track.id]));
+                emitLibraryChanged("favorites");
+                showToast(data.added ? "Добавлено в любимые" : "Уже в любимых");
+                return;
+            }
+
+            const res = await authFetch(`${API_URL}/api/playlist-tracks`, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${accessToken}`
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    title: name,
+                    playlistId,
+                    trackId: track.id
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || "Не удалось добавить в плейлист");
+            }
+
+            emitLibraryChanged("playlists");
+            showToast(data.added ? "Трек добавлен в плейлист" : "Трек уже был в плейлисте");
+        } catch (error) {
+            showError(error.message || "Не удалось сохранить трек");
+        }
+    };
+
+    const createPlaylistAndSaveTrack = async (title) => {
+        try {
+            const createRes = await authFetch(`${API_URL}/api/playlists`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    title,
                     description: null
                 })
             });
 
-            if (!createRes.ok) throw new Error("Ошибка создания плейлиста");
-
-            const playlist = await createRes.json();
-
-            for (let i = 0; i < tracksToSave.length; i++) {
-                await fetch(`${API_URL}/api/playlist-tracks`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${accessToken}`
-                    },
-                    body: JSON.stringify({
-                        playlistId: playlist.id,
-                        trackId: tracksToSave[i].id,
-                        order: i
-                    })
-                });
+            const created = await createRes.json();
+            if (!createRes.ok) {
+                throw new Error(created.error || "Не удалось создать плейлист");
             }
 
-            console.log("Плейлист успешно сохранён:", playlist.id);
-
-            // ⭐ Обновляем название
-            setPlaylistName(name);
-
-            // ⭐ Обновляем список плейлистов
-            refreshPlaylists();
-            setUserPlaylists((prev) => [playlist, ...prev]);
-            showToast("Плейлист сохранён");
-
-        } catch (err) {
-            console.error("Ошибка сохранения плейлиста:", err);
-            showToast("Не удалось сохранить плейлист");
+            setUserPlaylists((prev) => [created, ...prev]);
+            emitLibraryChanged("playlists");
+            await saveTrackToPlaylist(created.id);
+        } catch (error) {
+            showError(error.message || "Не удалось создать плейлист");
         }
     };
 
-    const addToExistingPlaylist = async (playlistId, tracksToAdd) => {
-        if (!user || !accessToken || !playlistId || !tracksToAdd?.length) return;
+    const toggleFavoriteTrack = async () => {
+        if (!track?.id || !user) return;
 
-        try {
-            let addedCount = 0;
-            let duplicateCount = 0;
+        const isFavorite = favoriteTrackIds.includes(track.id);
 
-            for (const playlistTrack of tracksToAdd) {
-                const res = await fetch(`${API_URL}/api/playlist-tracks`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${accessToken}`
-                    },
-                    body: JSON.stringify({
-                        playlistId,
-                        trackId: playlistTrack.id
-                    })
+        if (isFavorite) {
+            try {
+                const res = await authFetch(`${API_URL}/api/playlists/favorites/tracks/${track.id}`, {
+                    method: "DELETE"
                 });
-
                 const data = await res.json();
-
                 if (!res.ok) {
-                    throw new Error(data.error || "Ошибка добавления в плейлист");
+                    throw new Error(data.error || "Не удалось удалить из любимых");
                 }
 
-                if (data.added) addedCount += 1;
-                else duplicateCount += 1;
+                setFavoriteTrackIds((prev) => prev.filter((id) => id !== track.id));
+                emitLibraryChanged("favorites");
+                showToast("Удалено из любимых");
+            } catch (error) {
+                showError(error.message || "Не удалось удалить из любимых");
             }
-
-            refreshPlaylists();
-
-            if (addedCount > 0 && duplicateCount > 0) {
-                showToast(`Добавлено ${addedCount}, уже было ${duplicateCount}`);
-            } else if (addedCount > 0) {
-                showToast("Треки добавлены в плейлист");
-            } else {
-                showToast("Все выбранные треки уже есть в плейлисте");
-            }
-
-            setIsPlaylistOpen(false);
-        } catch (err) {
-            console.error("Ошибка добавления в существующий плейлист:", err);
-            showToast(err.message || "Не удалось добавить в существующий плейлист");
+            return;
         }
-    };
 
-    // ⭐ Очистка временного или сохранённого плейлиста
-    const clearTempPlaylist = () => {
-        setTracks([]);        // очищаем треки
-        setTrack(null);       // сбрасываем текущий трек
-        setPlaylistName(null); // ⭐ сбрасываем название
-
-        // ⭐ Обновляем список плейлистов (важно!)
-        refreshPlaylists();
+        setIsQuickSaveOpen(true);
     };
 
     return (
@@ -222,8 +246,11 @@ function Footer({
                         theme={theme}
                         track={track}
                         volume={volume}
-                        onTogglePlaylist={togglePlaylist}
+                        onToggleFavorite={toggleFavoriteTrack}
+                        isFavorite={favoriteTrackIds.includes(track?.id)}
+                        onPreviousTrack={playPreviousTrack}
                         onNextTrack={playNextTrack}
+                        hasPreviousTrack={hasPreviousTrack}
                         hasNextTrack={hasNextTrack}
                     />
                 </div>
@@ -238,28 +265,13 @@ function Footer({
 
             </footer>
 
-            {isPlaylistOpen && (
-                <PlaylistModal
-                    tracks={tracks}
-                    currentTrack={track}
-                    playlistNameInitial={playlistName}
-                    existingPlaylists={userPlaylists}
-                    onAddToExisting={addToExistingPlaylist}
-                    onSavePlaylist={savePlaylist}
-                    onClearTempPlaylist={clearTempPlaylist}
-                    onSelect={(t, autoPlay) => {
-                        setTrack(t);
-                        setIsPlaylistOpen(false);
-
-                        if (autoPlay) {
-                            setTimeout(() => {
-                                const audio = document.querySelector("audio");
-                                if (audio) audio.play();
-                            }, 50);
-                        }
-                    }}
-                    onClose={() => setIsPlaylistOpen(false)}
-                    theme={theme}
+            {isQuickSaveOpen && (
+                <QuickSaveModal
+                    playlists={userPlaylists}
+                    defaultPlaylistId={userPlaylists.find((item) => item.isFavorites)?.id || ""}
+                    onClose={() => setIsQuickSaveOpen(false)}
+                    onSaveToPlaylist={saveTrackToPlaylist}
+                    onCreatePlaylist={createPlaylistAndSaveTrack}
                 />
             )}
 

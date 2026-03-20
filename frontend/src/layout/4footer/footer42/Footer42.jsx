@@ -6,8 +6,6 @@ import ProgressBar from "../../../components/progressBar/ProgressBar";
 
 import { useFooter42Logic } from "./Footer42Function";
 
-import stacks1 from '../../../assets/icons/stacks1.png';
-import stacks2 from '../../../assets/icons/stacks2.png';
 import play1 from '../../../assets/icons/play1.png';
 import play2 from '../../../assets/icons/play2.png';
 import t10_1 from '../../../assets/icons/t10_1.png';
@@ -27,7 +25,7 @@ import skip_next2 from '../../../assets/icons/skip_next2.png';
 import pause1 from '../../../assets/icons/pause1.png';
 import pause2 from '../../../assets/icons/pause2.png';
 
-function Footer42({ theme, track, volume, onTogglePlaylist, onNextTrack, hasNextTrack }) {
+function Footer42({ theme, track, volume, onToggleFavorite, isFavorite, onPreviousTrack, onNextTrack, hasPreviousTrack, hasNextTrack }) {
 
     const {
         audioRef,
@@ -51,7 +49,6 @@ function Footer42({ theme, track, volume, onTogglePlaylist, onNextTrack, hasNext
         one: theme === "dark" ? repeat_one1 : repeat_one2
     }[repeatMode];
 
-    const playlistIcon = theme === 'dark' ? stacks1 : stacks2;
     const playIcon = theme === 'dark' ? play1 : play2;
     const t10_Icon = theme === 'dark' ? t10_1 : t10_2;
     const t30_Icon = theme === 'dark' ? t30_1 : t30_2;
@@ -67,8 +64,12 @@ function Footer42({ theme, track, volume, onTogglePlaylist, onNextTrack, hasNext
 
             <div className={styles.controls}>
 
-                <button className={styles.playBtn} onClick={onTogglePlaylist}>
-                    <img src={playlistIcon} className={styles.iconS} />
+                <button
+                    className={`${styles.playBtn} ${styles.favoriteBtn} ${isFavorite ? styles.favoriteActive : ""}`}
+                    onClick={onToggleFavorite}
+                    title="Любимые"
+                >
+                    <span className={styles.favoriteIcon}>{isFavorite ? "♥" : "♡"}</span>
                 </button>
 
                 <button
@@ -82,11 +83,29 @@ function Footer42({ theme, track, volume, onTogglePlaylist, onNextTrack, hasNext
                     <img src={t10_Icon} className={styles.iconS} />
                 </button>
 
+                <button
+                    className={styles.playBtn}
+                    onClick={onPreviousTrack}
+                    disabled={!hasPreviousTrack()}
+                    title="Предыдущий трек"
+                >
+                    <img src={skip_nextIcon} className={`${styles.iconS} ${styles.iconPrev}`} />
+                </button>
+
                 <button className={styles.playBtn} onClick={togglePlay}>
                     <img
                         src={isPlaying ? pauseIcon : playIcon}
                         className={styles.icon}
                     />
+                </button>
+
+                <button
+                    className={styles.playBtn}
+                    onClick={onNextTrack}
+                    disabled={!hasNextTrack()}
+                    title="Следующий трек"
+                >
+                    <img src={skip_nextIcon} className={styles.iconS} />
                 </button>
 
                 <button className={styles.playBtn} onClick={forward30}>
@@ -95,10 +114,6 @@ function Footer42({ theme, track, volume, onTogglePlaylist, onNextTrack, hasNext
 
                 <button className={styles.playBtn} onClick={toggleRepeat}>
                     <img src={repeatIconFinal} className={styles.iconS} />
-                </button>
-
-                <button className={styles.playBtn} onClick={onNextTrack}>
-                    <img src={skip_nextIcon} className={styles.iconS} />
                 </button>
 
             </div>

@@ -8,10 +8,10 @@ export default function ProgressBar({ audioRef }) {
     const [isDragging, setIsDragging] = useState(false);
     const [dragProgress, setDragProgress] = useState(0);
     const [smoothProgress, setSmoothProgress] = useState(0);
+    const smoothProgressRef = useRef(0);
 
     const rafRef = useRef(null);
 
-    // ⭐ Плавное обновление 60 FPS
     useEffect(() => {
         const animate = () => {
             if (!audioRef.current || isDragging) {
@@ -23,18 +23,27 @@ export default function ProgressBar({ audioRef }) {
             const duration = audioRef.current.duration || 1;
             const target = (current / duration) * 100;
 
-            // Линейная интерполяция
-            const delta = target - smoothProgress;
-            const step = delta * 0.15; // скорость сглаживания
-
-            setSmoothProgress((prev) => prev + step);
+            setSmoothProgress((prev) => {
+                const delta = target - prev;
+                const next = Math.abs(delta) < 0.15 ? target : prev + delta * 0.18;
+                smoothProgressRef.current = next;
+                return next;
+            });
 
             rafRef.current = requestAnimationFrame(animate);
         };
 
         rafRef.current = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(rafRef.current);
-    }, [audioRef, smoothProgress, isDragging]);
+    }, [audioRef, isDragging]);
+
+    useEffect(() => {
+        if (!audioRef.current?.src) {
+            smoothProgressRef.current = 0;
+            setSmoothProgress(0);
+            setDragProgress(0);
+        }
+    }, [audioRef, audioRef.current?.src]);
 
     // ⭐ Клик по полосе
     const handleClick = (e) => {
@@ -45,6 +54,7 @@ export default function ProgressBar({ audioRef }) {
         const percent = Math.min(Math.max(x / rect.width, 0), 1);
 
         audioRef.current.currentTime = percent * audioRef.current.duration;
+        smoothProgressRef.current = percent * 100;
         setSmoothProgress(percent * 100);
     };
 
@@ -73,6 +83,8 @@ export default function ProgressBar({ audioRef }) {
         if (audioRef.current) {
             const duration = audioRef.current.duration || 1;
             audioRef.current.currentTime = (dragProgress / 100) * duration;
+            smoothProgressRef.current = dragProgress;
+            setSmoothProgress(dragProgress);
             audioRef.current.play();
         }
     }, [audioRef, dragProgress, isDragging]);
@@ -99,6 +111,9 @@ export default function ProgressBar({ audioRef }) {
                 className={styles.bar}
                 ref={barRef}
                 onMouseDown={handleClick}
+                style={{
+                    background: `linear-gradient(to right, var(--progress-bg) 0%, var(--progress-bg) ${progress}%, var(--progress-fill) ${progress}%, var(--progress-fill) 100%)`
+                }}
             >
                 <div
                     className={styles.fill}

@@ -11,7 +11,8 @@ model User {
   id           String    @id @default(uuid())
   email        String    @unique
   password     String
-  timeZone     String
+  timeZone     String    @default("UTC")
+  isAdmin      Boolean   @default(false)
   refreshToken String?
 
   tracks    Track[]

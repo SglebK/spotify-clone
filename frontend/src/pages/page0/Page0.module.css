@@ -20,14 +20,15 @@
 }
 
 .card {
-  position: relative; /* ⭐ ОБЯЗАТЕЛЬНО для плюсика */
   background: var(--button-bg);
   border: 1px solid var(--button-border);
   border-radius: 12px;
   padding: 12px;
-  cursor: pointer;
   transition: transform 0.2s ease, opacity 0.2s ease;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .card:hover {
@@ -57,37 +58,22 @@
   color: var(--text);
 }
 
-/* ⭐ Плюсик */
-.plusBtn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-
-  width: 28px;
-  height: 28px;
-
-  border-radius: 50%;
-  border: 1px solid var(--button-border);
-
-  background: var(--button-bg);
-  color: var(--button-text);
-
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 24px;
-
+.actions {
   display: flex;
-  justify-content: center;
-  align-items: center;
-
-  cursor: pointer;
-  transition: 0.2s;
-  z-index: 10;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
 }
 
-.plusBtn:hover {
-  transform: scale(1.1);
-  opacity: 0.9;
+.cardButton {
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.deleteButton {
+  background: #d9534f !important;
+  color: #fff !important;
+  border-color: #d9534f !important;
 }
 
 @media (max-width: 900px) {
