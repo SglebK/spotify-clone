@@ -74,6 +74,52 @@ $env:VITE_API_URL="https://ВАШ-BACKEND-URL"
 npm run dev:share
 ```
 
+### Откуда брать `ВАШ-BACKEND-URL`
+
+После запуска backend откройте его туннелем, например через `cloudflared`:
+
+```powershell
+cloudflared tunnel --url http://localhost:5000
+```
+
+В ответ `cloudflared` покажет ссылку вида:
+
+```text
+https://something-random.trycloudflare.com
+```
+
+Именно эта ссылка и будет вашим `ВАШ-BACKEND-URL`.
+
+Пример:
+
+```powershell
+$env:VITE_API_URL="https://something-random.trycloudflare.com"
+npm run dev:share
+```
+
+### Как получить ссылку на frontend
+
+После запуска frontend откройте его вторым туннелем:
+
+```powershell
+cloudflared tunnel --url http://localhost:5173
+```
+
+`cloudflared` снова покажет ссылку вида:
+
+```text
+https://another-random.trycloudflare.com
+```
+
+Это и есть ссылка на сайт, которую нужно отправлять другим людям.
+
+### Что отправлять другим людям
+
+- отправляйте только ссылку на frontend
+- backend-ссылку людям отправлять не нужно
+- они просто открывают frontend URL в браузере
+- ваш компьютер в этот момент должен быть включён, а backend, frontend и оба туннеля должны работать
+
 Если нужно быстро переопределить API без перезапуска сборки, frontend также поддерживает параметр:
 
 ```text
@@ -81,6 +127,37 @@ https://ВАШ-FRONTEND-URL/?api=https://ВАШ-BACKEND-URL
 ```
 
 Тогда API URL сохранится в `localStorage` браузера.
+
+### Полный пример запуска
+
+1. backend:
+
+```powershell
+cd C:\spotify-clone\backend
+npm run dev
+```
+
+2. туннель для backend:
+
+```powershell
+cloudflared tunnel --url http://localhost:5000
+```
+
+3. frontend:
+
+```powershell
+cd C:\spotify-clone\frontend
+$env:VITE_API_URL="https://ВАШ-BACKEND-URL"
+npm run dev:share
+```
+
+4. туннель для frontend:
+
+```powershell
+cloudflared tunnel --url http://localhost:5173
+```
+
+5. отправьте людям frontend URL.
 
 ## Основные возможности
 
