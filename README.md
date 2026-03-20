@@ -46,6 +46,42 @@ npm run dev
 
 Frontend запускается через Vite, обычно на `http://localhost:5173`.
 
+## Временный показ другим людям
+
+Для показа проекта на 1-2 дня удобнее всего запускать его у себя и открывать наружу через туннель.
+
+Рекомендуемый сценарий:
+1. запустить backend локально
+2. открыть backend туннелем
+3. запустить frontend с внешним `VITE_API_URL`
+4. открыть frontend вторым туннелем
+5. отправить людям ссылку только на frontend
+
+### Команды для такого запуска
+
+Backend:
+
+```powershell
+cd C:\spotify-clone\backend
+npm run dev
+```
+
+Frontend:
+
+```powershell
+cd C:\spotify-clone\frontend
+$env:VITE_API_URL="https://ВАШ-BACKEND-URL"
+npm run dev:share
+```
+
+Если нужно быстро переопределить API без перезапуска сборки, frontend также поддерживает параметр:
+
+```text
+https://ВАШ-FRONTEND-URL/?api=https://ВАШ-BACKEND-URL
+```
+
+Тогда API URL сохранится в `localStorage` браузера.
+
 ## Основные возможности
 
 - регистрация и вход
@@ -73,6 +109,7 @@ Frontend запускается через Vite, обычно на `http://local
 cd C:\spotify-clone\frontend
 npm run build
 npm run lint
+npm run dev:share
 ```
 
 ### Backend
