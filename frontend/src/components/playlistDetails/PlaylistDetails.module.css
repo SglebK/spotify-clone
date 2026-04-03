@@ -1,0 +1,135 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: var(--button-bg);
+    border: 1px solid var(--button-border);
+    border-radius: 16px;
+    box-shadow: 0 8px 18px var(--button-shadow);
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.hero {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 20px;
+}
+
+.coverCell {
+    display: grid;
+    align-items: start;
+    justify-items: start;
+}
+
+.cover {
+    width: 220px;
+    height: 220px;
+    border-radius: 16px;
+    object-fit: cover;
+    background: var(--button-bg-active);
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+}
+
+.title {
+    margin: 8px 0 10px;
+    font-size: 36px;
+    color: var(--text);
+}
+
+.description {
+    opacity: 0.8;
+    color: var(--text);
+}
+
+.meta {
+    margin-top: 10px;
+    font-size: 14px;
+    opacity: 0.7;
+    color: var(--text);
+}
+
+.buttonCell {
+    display: grid;
+    justify-items: start;
+    align-items: center;
+    margin-top: 16px;
+    max-width: 300px;
+}
+
+.playButton,
+.editButton,
+.kickButton {
+    padding: 8px 18px;
+    font-size: 15px;
+    border-radius: 10px;
+    width: 100%;
+    background: var(--button-bg);
+    border: 1px solid var(--button-border);
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 6px var(--button-shadow);
+}
+
+.playButton:hover,
+.editButton:hover,
+.kickButton:hover {
+    background: var(--button-bg-hover);
+    border-color: var(--select-value-color);
+    box-shadow: 0 3px 10px var(--button-shadow);
+}
+
+.trackList {
+    display: grid;
+    gap: 10px;
+}
+
+.empty {
+    opacity: 0.7;
+    color: var(--text);
+    text-align: center;
+    padding: 40px 0;
+}
+
+@media (max-width: 1000px) {
+    .wrapper {
+        padding: 18px 16px 22px;
+    }
+
+    .hero {
+        grid-template-columns: 1fr;
+    }
+
+    .coverCell {
+        justify-items: center;
+    }
+
+    .cover {
+        width: 180px;
+        height: 180px;
+    }
+
+    .title {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 560px) {
+    .wrapper {
+        border-radius: 14px;
+    }
+
+    .cover {
+        width: 160px;
+        height: 160px;
+    }
+
+    .title {
+        font-size: 26px;
+    }
+}

@@ -1,4 +1,3 @@
-/* src/components/progressBar/ProgressBar.module.css*/
 .wrapper {
   width: 100%;
   display: flex;
@@ -8,7 +7,7 @@
 .bar {
   position: relative;
   width: 100%;
-  height: 6px; /* толщина полосы */
+  height: 6px;
   border-radius: 4px;
   cursor: pointer;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
@@ -18,13 +17,13 @@
   height: 100%;
   background: var(--progress-bg);
   border-radius: 4px;
-  transition: none; /* мы сами делаем плавность через JS */
+  transition: none;
 }
 
 .thumb {
   position: absolute;
   top: 50%;
-  width: 14px; /* размер кружка */
+  width: 14px;
   height: 14px;
   background: var(--progress-bg);
   border-radius: 50%;

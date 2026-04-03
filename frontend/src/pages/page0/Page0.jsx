@@ -1,83 +1,82 @@
-// src/pages/page0/Page0.jsx
 import React, { useEffect, useState } from "react";
 import styles from "./Page0.module.css";
-import Toast from "../../components/toast/Toast.jsx";
-import { API_URL } from "../../components/utils/api/config";
-import { fixUrl } from "../../components/utils/fixUrl/fixUrl";
-import TrackFilters from "../../components/trackFilters/TrackFilters.jsx";
-import { useError } from "../../context/error/ErrorContext.jsx";
-import { useAuth } from "../../context/auth/AuthContext.jsx";
-import { authFetch } from "../../components/utils/api/authFetch.js";
+import api from "@api/axios";
+import Toast from "@components/toast/Toast.jsx";
+import { fixUrl } from "@helpers/fixUrl";
+import TrackFilters from "@components/trackFilters/TrackFilters.jsx";
+import TrackCard from "@components/trackCard/TrackCard.jsx";
+import TrackModal from "@components/trackModal/TrackModal.jsx";
+import QuickSaveModal from "@components/quickSaveModal/QuickSaveModal.jsx";
+import { useError } from "@context/ErrorContext.jsx";
+import { useAuth } from "@context/AuthContext.jsx";
 
-function Page0({ onSelectTrack, tracks, setTracks, setPlaylistName, searchQuery }) {
+function Page0({
+    onSelectTrack,
+    tracks,
+    setTracks,
+    setPlaylistName,
+    searchQuery
+}) {
     const [serverTracks, setServerTracks] = useState([]);
     const [toast, setToast] = useState(null);
+    const [selectedTrack, setSelectedTrack] = useState(null);
     const [sortBy, setSortBy] = useState("createdAt");
     const [sortOrder, setSortOrder] = useState("desc");
     const [type, setType] = useState("all");
     const { showError } = useError();
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
+    const [quickSaveTrack, setQuickSaveTrack] = useState(null);
+    const [showQuickSave, setShowQuickSave] = useState(false);
+
+    if (loading) return null;
 
     useEffect(() => {
         let active = true;
-
-        const loadTracks = () => {
-            const params = new URLSearchParams({
-                search: searchQuery?.trim() || "",
-                sortBy,
-                sortOrder,
-                type
-            });
-
-            fetch(`${API_URL}/api/tracks?${params.toString()}`)
-                .then(async (res) => {
-                    if (!res.ok) {
-                        throw new Error(`Ошибка загрузки: ${res.status}`);
-                    }
-                    return res.json();
-                })
-                .then(data => {
-                    if (active) setServerTracks(data);
-                })
-                .catch(err => {
-                    console.error("Ошибка загрузки треков:", err);
-                    showError("Не удалось загрузить список треков");
-                });
+        const loadTracks = async () => {
+            try {
+                const params = {
+                    search: searchQuery?.trim() || "",
+                    sortBy,
+                    sortOrder,
+                    type
+                };
+                const { data } = await api.get("/api/tracks", { params });
+                if (active) {
+                    const prepared = data.map(t => ({
+                        ...t,
+                        audioUrl: fixUrl(t.audioUrl),
+                        coverUrl: fixUrl(t.coverUrl)
+                    }));
+                    setServerTracks(prepared);
+                }
+            } catch (err) {
+                console.error("Ошибка загрузки треков:", err);
+                showError("Не удалось загрузить список треков");
+            }
         };
-
         loadTracks();
-        const intervalId = setInterval(loadTracks, 12000);
 
         return () => {
             active = false;
-            clearInterval(intervalId);
         };
     }, [searchQuery, sortBy, sortOrder, type, showError]);
-
     const addToPlaylist = (track) => {
-        const preparedTrack = {
+        const prepared = {
             ...track,
             audioUrl: fixUrl(track.audioUrl),
             coverUrl: fixUrl(track.coverUrl)
         };
-
-        const exists = tracks.some(t => t.id === preparedTrack.id);
-
-        if (exists) {
+        if (tracks.some(t => t.id === prepared.id)) {
             setToast("Трек уже в плейлисте");
             setTimeout(() => setToast(null), 2000);
             return;
         }
-
-        // ⭐ Сбрасываем название — это новый временный плейлист
         setPlaylistName(null);
-
-        setTracks(prev => [...prev, preparedTrack]);
+        setTracks(prev => [...prev, prepared]);
 
         setToast("Добавлено в плейлист");
         setTimeout(() => setToast(null), 2000);
     };
-
     const playTrack = (track) => {
         onSelectTrack({
             ...track,
@@ -85,33 +84,35 @@ function Page0({ onSelectTrack, tracks, setTracks, setPlaylistName, searchQuery 
             coverUrl: fixUrl(track.coverUrl)
         });
     };
-
-    const deleteTrack = async (trackId) => {
-        if (!user?.isAdmin) return;
-        if (!confirm("Удалить этот трек из общего каталога?")) return;
-
+    const makeTrackPrivate = async (trackId) => {
+        const track = serverTracks.find(t => t.id === trackId);
+        if (!track) return;
         try {
-            const res = await authFetch(`${API_URL}/api/tracks/${trackId}`, {
-                method: "DELETE"
-            });
+            const isOwner = user && track.userId === user.id;
 
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.error || "Не удалось удалить трек");
+            if (isOwner && track.isPublic) {
+                if (!confirm("Сделать этот трек приватным?")) return;
+                await api.put(`/api/tracks/${trackId}`, {
+                    isPublic: false
+                });
+                setServerTracks(prev => prev.filter(item => item.id !== trackId));
+                setToast("Трек сделан приватным");
+            } else if (user?.isAdmin) {
+                if (!confirm("Удалить этот трек как админ?")) return;
+                await api.delete(`/api/tracks/${trackId}`);
+                setServerTracks(prev => prev.filter(item => item.id !== trackId));
+                setToast("Трек удалён администратором");
+            } else {
+                return;
             }
 
-            setServerTracks((prev) => prev.filter((item) => item.id !== trackId));
-            setToast("Трек удалён");
             setTimeout(() => setToast(null), 2000);
         } catch (error) {
-            showError(error.message || "Не удалось удалить трек");
+            showError(error.response?.data?.error || "Не удалось изменить статус трека");
         }
     };
-
     return (
         <div className={styles.page}>
-            <h2 className={styles.title}>Все треки</h2>
-
             <TrackFilters
                 title="Фильтрация и сортировка каталога"
                 sortBy={sortBy}
@@ -126,51 +127,43 @@ function Page0({ onSelectTrack, tracks, setTracks, setPlaylistName, searchQuery 
                     { value: "uploaded", label: "Пользовательские" }
                 ]}
             />
-
             <div className={styles.grid}>
                 {serverTracks.map(track => (
-                    <div key={track.id} className={styles.card}>
-                        <img 
-                            src={fixUrl(track.coverUrl) || "/default-cover.png"} 
-                            alt={track.title} 
-                            className={styles.cover}
-                        />
-
-                        <p className={styles.trackTitle}>{track.title}</p>
-                        <p className={styles.artist}>{track.artist}</p>
-
-                        <div className={styles.actions}>
-                            <button
-                                className={`button ${styles.cardButton}`}
-                                onClick={() => playTrack(track)}
-                            >
-                                Слушать
-                            </button>
-
-                            <button
-                                className={`button ${styles.cardButton}`}
-                                onClick={() => addToPlaylist(track)}
-                            >
-                                В очередь
-                            </button>
-
-                            {user?.isAdmin && (
-                                <button
-                                    className={`button ${styles.cardButton} ${styles.deleteButton}`}
-                                    onClick={() => deleteTrack(track.id)}
-                                >
-                                    Удалить
-                                </button>
-                            )}
-                        </div>
-                    </div>
+                    <TrackCard
+                        key={track.id}
+                        track={track}
+                        onOpen={() => setSelectedTrack(track)}
+                    />
                 ))}
             </div>
-
-            {/* ⭐ Toast уведомление */}
+            {selectedTrack && (
+                <div
+                    className="overlay"
+                    onClick={() => setSelectedTrack(null)}
+                >
+                    <TrackModal
+                        track={selectedTrack}
+                        onClose={() => setSelectedTrack(null)}
+                        onPlay={playTrack}
+                        onAdd={addToPlaylist}
+                        onDelete={user ? makeTrackPrivate : undefined}
+                        mode="catalog"
+                        user={user}
+                        onAddToPlaylist={(track) => {
+                            setQuickSaveTrack(track);
+                            setShowQuickSave(true);
+                        }}
+                    />
+                </div>
+            )}
+            {showQuickSave && (
+                <QuickSaveModal
+                    track={quickSaveTrack}
+                    onClose={() => setShowQuickSave(false)}
+                />
+            )}
             {toast && <Toast message={toast} />}
         </div>
     );
 }
-
 export default Page0;

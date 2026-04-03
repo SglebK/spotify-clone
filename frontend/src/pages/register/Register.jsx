@@ -1,74 +1,50 @@
-// src/pages/register/Register.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_URL } from "../../components/utils/api/config";
-import styles from './Register.module.css';
-import { useError } from '../../context/error/ErrorContext.jsx';
-import { useAuth } from '../../context/auth/AuthContext.jsx';
-
-function Register({ theme }) {
+import styles from "./Register.module.css";
+import api from "@api/axios";
+import { useError } from "@context/ErrorContext.jsx";
+import { useAuth } from "@context/AuthContext.jsx";
+function Register() {
   const navigate = useNavigate();
   const { showError } = useError();
   const { login } = useAuth();
-
   const [loading, setLoading] = useState(false);
   const [emailInput, setEmailInput] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
   const handleRegister = async (e) => {
     e.preventDefault();
-
     if (!emailInput || !password || !confirmPassword) {
       showError("Заполните все поля");
       return;
     }
-
     if (password !== confirmPassword) {
       showError("Пароли не совпадают");
       return;
     }
-
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: emailInput,
-          password,
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
-        })
+      await api.post("/api/auth/register", {
+        email: emailInput,
+        password,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        showError(data.error || "Ошибка регистрации");
-        return;
-      }
-
       await login(emailInput, password);
       navigate("/");
-    } catch {
-      showError("Ошибка сети");
+    } catch (err) {
+      showError(err.response?.data?.error || "Ошибка регистрации");
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className={styles.grid3}>
-      <div className={`${styles.gridLogin} ${theme === 'dark' ? styles.dark : ''}`}>
-        
+      <div className={styles.gridLogin}>
         <div className="closeButton" onClick={() => navigate("/")}>
           ✖
         </div>
-
         <h2 className={styles.gridHeader}>Регистрация</h2>
-
         <form onSubmit={handleRegister} className={styles.gridForm}>
-          
           <div className={styles.gridRow}>
             <label>Email:</label>
             <input
@@ -78,7 +54,6 @@ function Register({ theme }) {
               onChange={(e) => setEmailInput(e.target.value)}
             />
           </div>
-
           <div className={styles.gridRow}>
             <label>Пароль:</label>
             <input
@@ -88,7 +63,6 @@ function Register({ theme }) {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-
           <div className={styles.gridRow}>
             <label>Повторите пароль:</label>
             <input
@@ -98,7 +72,6 @@ function Register({ theme }) {
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
-
           <button
             type="submit"
             className="button"
@@ -107,7 +80,6 @@ function Register({ theme }) {
             Зарегистрироваться
           </button>
         </form>
-
         <p className={styles.gridFooter}>
           После регистрации вход выполнится автоматически.
         </p>
@@ -115,5 +87,4 @@ function Register({ theme }) {
     </div>
   );
 }
-
 export default Register;

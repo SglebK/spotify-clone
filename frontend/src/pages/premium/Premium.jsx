@@ -1,6 +1,5 @@
 import React from "react";
 import styles from "./Premium.module.css";
-
 function Premium() {
     return (
         <div className={styles.page}>
@@ -18,5 +17,4 @@ function Premium() {
         </div>
     );
 }
-
 export default Premium;

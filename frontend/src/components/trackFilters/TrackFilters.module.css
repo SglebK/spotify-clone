@@ -7,7 +7,8 @@
     margin-bottom: 18px;
     border: 1px solid var(--button-border);
     border-radius: 16px;
-    background: rgba(255,255,255,0.04);
+    background: rgba(250, 249, 249, 0.04);
+    position: relative;
 }
 
 .titleBlock {
@@ -43,17 +44,54 @@
     padding: 0 10px;
 }
 
-@media (max-width: 640px) {
-    .toolbar {
-        padding: 12px;
+.toolbarToggle {
+    display: none;
+}
+
+@media (max-width: 960px) {
+    .toolbarToggle {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--button-bg);
+        border: 1px solid var(--button-border);
+        padding: 12px 14px;
+        border-radius: 12px;
+        font-size: 15px;
+        color: var(--text);
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .titleBlock {
+        display: none;
     }
 
     .controls {
+        display: none;
+        flex-direction: column;
         width: 100%;
+        margin-top: 10px;
+        padding: 12px;
+        border-radius: 12px;
+        background: var(--bg);
+        border: 1px solid var(--button-border);
+        animation: fadeIn 0.2s ease;
+    }
+
+    .toolbar:hover .controls,
+    .toolbar:focus-within .controls {
+        display: flex;
     }
 
     .control,
     .select {
         width: 100%;
     }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
 }

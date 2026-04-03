@@ -154,6 +154,42 @@ function mapUser(user) {
   };
 }
 
+function serializePlaylistSummary(playlist) {
+  return {
+    id: playlist.id,
+    title: playlist.title,
+    description: playlist.description,
+    coverUrl: playlist.coverUrl,
+    isPublic: !!playlist.isPublic,
+    isFavorites: !!playlist.isFavorites,
+    userId: playlist.userId,
+    createdAt: playlist.createdAt,
+    deletedAt: playlist.deletedAt,
+    restoredAt: playlist.restoredAt,
+    ownerEmail: playlist.user?.email || null,
+    // New playlist cards on the refreshed frontend always render a track counter.
+    // Returning it consistently keeps "My playlists", "Public playlists" and
+    // "Favorites" in the same response shape.
+    trackCount: Array.isArray(playlist.tracks)
+      ? playlist.tracks.filter((item) => !item.deletedAt).length
+      : Number(playlist._count?.tracks || 0)
+  };
+}
+
+function serializePlaylistDetails(playlist) {
+  return {
+    ...serializePlaylistSummary(playlist),
+    tracks: (playlist.tracks || [])
+      .filter((item) => !item.deletedAt)
+      .map((item) => item.track || item)
+      .filter((track) => !track?.deletedAt)
+  };
+}
+
+function normalizeEmail(email) {
+  return typeof email === 'string' ? email.trim().toLowerCase() : '';
+}
+
 function removeFileIfExists(file) {
   if (!file?.path) return;
 
@@ -184,7 +220,9 @@ app.get('/api/status/ping', (req, res) => {
 // auth routes
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email, password, timeZone } = req.body;
+    const { password, timeZone } = req.body;
+    const email = normalizeEmail(req.body.email);
+
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password required' });
     }
@@ -208,7 +246,8 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
+  const email = normalizeEmail(req.body.email);
+  const { password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password required' });
   }
@@ -455,9 +494,23 @@ app.get('/api/playlists/my', authenticate, async (req, res) => {
           }
         : {})
     },
+    include: {
+      _count: {
+        select: {
+          tracks: {
+            where: {
+              deletedAt: null,
+              track: {
+                deletedAt: null
+              }
+            }
+          }
+        }
+      }
+    },
     orderBy: [{ isFavorites: 'desc' }, { createdAt: 'desc' }]
   });
-  res.json(lists);
+  res.json(lists.map(serializePlaylistSummary));
 });
 
 app.get('/api/playlists/public', async (req, res) => {
@@ -493,9 +546,7 @@ app.get('/api/playlists/public', async (req, res) => {
   });
 
   res.json(lists.map((playlist) => ({
-    ...playlist,
-    ownerEmail: playlist.user?.email || null,
-    trackCount: playlist.tracks.length,
+    ...serializePlaylistSummary(playlist),
     tracks: playlist.tracks.map((item) => item.track)
   })));
 });
@@ -524,8 +575,7 @@ app.get('/api/playlists/public/:id', async (req, res) => {
   }
 
   res.json({
-    ...playlist,
-    ownerEmail: playlist.user?.email || null,
+    ...serializePlaylistSummary(playlist),
     tracks: playlist.tracks.map((item) => item.track)
   });
 });
@@ -541,9 +591,16 @@ app.post('/api/playlists', authenticate, async (req, res) => {
         coverUrl: null,
         isFavorites: false,
         userId: req.user.id
+      },
+      include: {
+        _count: {
+          select: {
+            tracks: true
+          }
+        }
       }
     });
-    res.json(pl);
+    res.json(serializePlaylistSummary(pl));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Could not create playlist' });
@@ -556,6 +613,11 @@ app.get('/api/playlists/:id', authenticate, async (req, res, next) => {
   const pl = await prisma.playlist.findUnique({
     where: { id },
     include: {
+      user: {
+        select: {
+          email: true
+        }
+      },
       tracks: {
         where: { deletedAt: null },
         orderBy: { order: 'asc' },
@@ -563,10 +625,10 @@ app.get('/api/playlists/:id', authenticate, async (req, res, next) => {
       }
     }
   });
-  if (!pl || pl.userId !== req.user.id) return res.status(404).json({ error: 'Playlist not found' });
-  // unwrap tracks
-  const tracks = pl.tracks.map(pt => pt.track);
-  res.json({ ...pl, tracks });
+  if (!pl || (!req.user.isAdmin && pl.userId !== req.user.id)) {
+    return res.status(404).json({ error: 'Playlist not found' });
+  }
+  res.json(serializePlaylistDetails(pl));
 });
 
 app.put('/api/playlists/:id', authenticate, async (req, res) => {
@@ -597,10 +659,36 @@ app.put('/api/playlists/:id', authenticate, async (req, res) => {
     }
 
     await prisma.playlist.updateMany({
-      where: { id, userId: req.user.id },
+      where: req.user.isAdmin
+        ? { id }
+        : { id, userId: req.user.id },
       data: update
     });
-    res.json({ success: true });
+
+    const updated = await prisma.playlist.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            email: true
+          }
+        },
+        _count: {
+          select: {
+            tracks: {
+              where: {
+                deletedAt: null,
+                track: {
+                  deletedAt: null
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    res.json(serializePlaylistSummary(updated));
   } catch (err) {
     res.status(500).json({ error: 'Unable to update playlist' });
   }
@@ -610,7 +698,11 @@ app.delete('/api/playlists/:id', authenticate, async (req, res) => {
   const { id } = req.params;
   try {
     const playlist = await prisma.playlist.findFirst({
-      where: { id, userId: req.user.id, deletedAt: null }
+      where: {
+        id,
+        deletedAt: null,
+        ...(req.user.isAdmin ? {} : { userId: req.user.id })
+      }
     });
 
     if (!playlist) {
@@ -623,7 +715,11 @@ app.delete('/api/playlists/:id', authenticate, async (req, res) => {
 
     // remove any tracks linked to the playlist first to satisfy foreign keys
     await prisma.playlistTrack.deleteMany({ where: { playlistId: id } });
-    await prisma.playlist.deleteMany({ where: { id, userId: req.user.id } });
+    await prisma.playlist.deleteMany({
+      where: req.user.isAdmin
+        ? { id }
+        : { id, userId: req.user.id }
+    });
     res.json({ success: true });
   } catch (err) {
     console.error('delete playlist error', err);
@@ -672,8 +768,29 @@ app.put('/api/playlists/:id/details', authenticate, upload.fields([{ name: 'cove
       data
     });
 
-    const updated = await prisma.playlist.findUnique({ where: { id } });
-    res.json(updated);
+    const updated = await prisma.playlist.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            email: true
+          }
+        },
+        _count: {
+          select: {
+            tracks: {
+              where: {
+                deletedAt: null,
+                track: {
+                  deletedAt: null
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+    res.json(serializePlaylistSummary(updated));
   } catch (err) {
     console.error('update playlist details error', err);
     res.status(500).json({ error: 'Unable to update playlist details' });
@@ -824,7 +941,7 @@ app.get('/api/playlists/favorites', authenticate, async (req, res) => {
   });
 
   res.json({
-    ...favorites,
+    ...serializePlaylistSummary(favorites),
     tracks
   });
 });

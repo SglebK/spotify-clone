@@ -1,0 +1,50 @@
+.cardWrapper {
+    display: grid;
+    width: 100%;
+    padding: 0;
+    border-radius: 12px;
+    border: 1px solid transparent;
+}
+
+.activeWrapper {
+    border-color: var(--select-value-color);
+}
+
+.cardButton {
+    width: 100%;
+    text-align: left;
+    background: var(--button-bg);
+    color: var(--text);
+    border: 1px solid var(--button-border);
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 4px 8px var(--button-shadow);
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.cardButton:hover {
+    background: var(--button-bg-hover);
+    border-color: var(--select-value-color);
+    box-shadow: 0 3px 10px var(--button-shadow);
+}
+
+.cardButton:active {
+    background: var(--button-bg-active);
+    transform: scale(0.98);
+}
+
+.title {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text);
+}
+
+.meta {
+    font-size: 13px;
+    opacity: 0.7;
+    color: var(--text);
+}

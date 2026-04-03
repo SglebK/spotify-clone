@@ -1,27 +1,21 @@
-/* src/pages/login/Login.jsx */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Login.module.css';
-import { useAuth } from '../../context/auth/AuthContext.jsx';
-import { useError } from '../../context/error/ErrorContext.jsx';
-
+import { useAuth } from "@context/AuthContext.jsx";
+import { useError } from "@context/ErrorContext.jsx";
 function Login({ theme }) {
   const navigate = useNavigate();
   const { login } = useAuth();
   const { showError } = useError();
-
   const [loading, setLoading] = useState(false);
   const [emailInput, setEmailInput] = useState('');
   const [password, setPassword] = useState('');
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!emailInput || !password) {
       showError("Введите email и пароль");
       return;
     }
-
     setLoading(true);
     try {
       await login(emailInput, password);
@@ -32,18 +26,13 @@ function Login({ theme }) {
       setLoading(false);
     }
   };
-
   return (
     <div className={`${styles.loginContainer} ${styles[theme]}`}>
-
       <div className="closeButton" onClick={() => navigate("/")}>
         ✖
       </div>
-
       <h2>Вход</h2>
-
-      <form onSubmit={handleSubmit} className={styles.form}>
-        
+      <form onSubmit={handleSubmit} className={styles.form}>       
         <div className={styles.row}>
           <label>Email:</label>
           <input
@@ -53,7 +42,6 @@ function Login({ theme }) {
             className="input"
           />
         </div>
-
         <div className={styles.row}>
           <label>Пароль:</label>
           <input
@@ -63,7 +51,6 @@ function Login({ theme }) {
             className="input"
           />
         </div>
-
         <button
           type="submit"
           className="button"
@@ -73,12 +60,10 @@ function Login({ theme }) {
         </button>
 
       </form>
-
       <p className={styles.footer}>
         Авторизация сохраняется автоматически.
       </p>
     </div>
   );
 }
-
 export default Login;

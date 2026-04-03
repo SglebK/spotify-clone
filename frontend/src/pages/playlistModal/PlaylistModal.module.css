@@ -1,5 +1,3 @@
-/* src/pages/playlistModal/PlaylistModal.module.css */
-
 .overlay {
     position: fixed;
     inset: 0;
@@ -70,7 +68,6 @@
     background: rgba(255,255,255,0.04);
 }
 
-/* ⭐ МАЛЕНЬКИЕ КНОПКИ */
 .smallButton {
     width: auto;
     padding: 6px 12px;
@@ -78,7 +75,6 @@
     margin: 0;
 }
 
-/* ⭐ Кнопка очистки (для нового плейлиста) */
 .deleteBtn {
     background: #d9534f !important;
     color: white !important;
@@ -89,7 +85,6 @@
     background: #c9302c !important;
 }
 
-/* ⭐ Модалка ввода названия */
 .nameModal {
     background: var(--bg);
     border: 1px solid var(--input-border);
@@ -106,7 +101,6 @@
     border-radius: 10px;
 }
 
-/* ⭐ Кнопки ОК / Отмена */
 .nameButtons {
     display: flex;
     justify-content: flex-end;
@@ -198,7 +192,6 @@
     opacity: 0.75;
 }
 
-/* ⭐ Блок "Сейчас играет" */
 .nowPlayingBlock {
     margin-bottom: 20px;
 }
@@ -209,7 +202,6 @@
     margin-bottom: 6px;
 }
 
-/* ⭐ Элемент списка */
 .item {
     padding: 10px 12px;
     border-radius: 8px;
@@ -226,13 +218,11 @@
     background: rgba(255,255,255,0.1);
 }
 
-/* ⭐ Активный трек */
 .active {
     background: var(--progress-bg);
     color: white;
 }
 
-/* ⭐ Текст */
 .title {
     font-size: 16px;
     font-weight: 600;

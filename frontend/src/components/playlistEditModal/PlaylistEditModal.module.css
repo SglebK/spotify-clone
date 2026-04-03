@@ -1,0 +1,188 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: grid;
+    place-items: center;
+    z-index: 9999;
+}
+
+.modal {
+    position: relative;
+    width: 420px;
+    background: var(--button-bg);
+    border: 1px solid var(--button-border);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 8px 20px var(--button-shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.closeButton {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 22px;
+    height: 22px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.closeButton::before,
+.closeButton::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 18px;
+    height: 2.5px;
+    background: #ff4d4d;
+    transform-origin: center;
+}
+
+.closeButton::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.closeButton::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.closeButton:hover::before,
+.closeButton:hover::after {
+    background: #ff1a1a;
+}
+
+.heading {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.coverBlock {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 10px;
+}
+
+.cover {
+    width: 90px;
+    height: 90px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: var(--button-bg-active);
+    border: 1px solid var(--button-border);
+}
+
+.coverButton {
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--button-bg);
+    border: 1px solid var(--button-border);
+    color: var(--text);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.coverButton:hover {
+    background: var(--button-bg-hover);
+    border-color: var(--select-value-color);
+}
+
+.label {
+    font-size: 14px;
+    color: var(--text);
+    opacity: 0.9;
+}
+
+.input,
+.textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--button-border);
+    background: var(--button-bg-active);
+    color: var(--text);
+    font-size: 15px;
+}
+
+.textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.checkboxRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    color: var(--text);
+    font-size: 15px;
+}
+
+.actionRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.actionCell {
+    flex: 1;
+}
+
+.save,
+.delete,
+.cancel {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.2s;
+    border: 1px solid var(--button-border);
+}
+
+.save {
+    background: var(--button-bg);
+    border: 1px solid var(--button-border);
+    color: var(--text);
+}
+
+.save:hover {
+    background: var(--button-bg-hover);
+    border-color: var(--select-value-color);
+}
+
+.delete {
+    background: #ffdddd;
+    border: 1px solid #ffb3b3;
+    color: #d40000;
+}
+
+.delete:hover {
+    background: #ffcccc;
+    border-color: #ff8080;
+}
+
+.cancel {
+    background: #f5cfcf;
+    border: 1px solid #f0ebeb;
+    color: #e10b0b;
+}
+
+.cancel:hover {
+    background: #efbebd;
+}
+
+@media (max-width: 480px) {
+    .modal {
+        width: 90%;
+        padding: 20px;
+    }
+}

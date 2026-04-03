@@ -1,206 +1,162 @@
 import React, { useEffect, useState } from "react";
 import styles from "./Favorites.module.css";
-import { API_URL } from "../../components/utils/api/config";
-import { useAuth } from "../../context/auth/AuthContext";
-import { useError } from "../../context/error/ErrorContext.jsx";
-import { fixUrl } from "../../components/utils/fixUrl/fixUrl";
-import Toast from "../../components/toast/Toast.jsx";
-import TrackFilters from "../../components/trackFilters/TrackFilters.jsx";
-import { authFetch } from "../../components/utils/api/authFetch.js";
-
-function Favorites({ onPlayTrack, tracks, setTracks, setPlaylistName }) {
-    const { accessToken } = useAuth();
+import api from "@api/axios";
+import { useAuth } from "@context/AuthContext";
+import { useError } from "@context/ErrorContext.jsx";
+import { fixUrl } from "@helpers/fixUrl";
+import TrackFilters from "@components/trackFilters/TrackFilters.jsx";
+import TrackCard from "@components/trackCard/TrackCard.jsx";
+import TrackModal from "@components/trackModal/TrackModal.jsx";
+import QuickSaveModal from "@components/quickSaveModal/QuickSaveModal.jsx";
+import Toast from "@components/toast/Toast.jsx";
+import { libraryEvents } from "@helpers/libraryEvents";
+function Favorites({ onPlayTrack, setTracks }) {
+    const { user, accessToken, loading } = useAuth();
     const { showError } = useError();
-    const [favorites, setFavorites] = useState([]);
+    const [allFavorites, setAllFavorites] = useState([]);
+    const [filtered, setFiltered] = useState([]);
     const [selectedTrack, setSelectedTrack] = useState(null);
     const [toast, setToast] = useState(null);
+    const [activeTab, setActiveTab] = useState("public");
     const [sortBy, setSortBy] = useState("createdAt");
     const [sortOrder, setSortOrder] = useState("desc");
     const [type, setType] = useState("all");
-
+    const [quickSaveTrack, setQuickSaveTrack] = useState(null);
+    const [showQuickSave, setShowQuickSave] = useState(false);
+    if (loading) return null;
+    if (!accessToken) return null;
     useEffect(() => {
         let active = true;
-
         const loadFavorites = async () => {
             try {
-                const params = new URLSearchParams({
+                const params = {
                     sortBy,
                     sortOrder,
                     type
-                });
-
-                const res = await authFetch(`${API_URL}/api/playlists/favorites?${params.toString()}`);
-
-                const data = await res.json();
-
-                if (!res.ok) {
-                    throw new Error(data.error || "Не удалось загрузить любимые треки");
-                }
-
+                };
+                const { data } = await api.get("/api/playlists/favorites", { params });
                 if (!active) return;
-
-                const nextTracks = data.tracks || [];
-                setFavorites(nextTracks);
-                setSelectedTrack((prev) => prev ? nextTracks.find((item) => item.id === prev.id) || null : nextTracks[0] || null);
-            } catch (error) {
-                console.error("Ошибка favorites:", error);
-                showError(error.message || "Не удалось загрузить любимые треки");
+                const prepared = (data.tracks || []).map(t => ({
+                    ...t,
+                    audioUrl: fixUrl(t.audioUrl),
+                    coverUrl: fixUrl(t.coverUrl)
+                }));
+                setAllFavorites(prepared);
+            } catch (err) {
+                showError(err.response?.data?.error || "Не удалось загрузить любимые треки");
             }
         };
-
         loadFavorites();
         const intervalId = setInterval(loadFavorites, 12000);
-        const handleLibraryChanged = () => loadFavorites();
-        window.addEventListener("library:changed", handleLibraryChanged);
-
         return () => {
             active = false;
             clearInterval(intervalId);
-            window.removeEventListener("library:changed", handleLibraryChanged);
         };
     }, [accessToken, sortBy, sortOrder, type, showError]);
-
-    const showToast = (message) => {
-        setToast(message);
-        setTimeout(() => setToast(null), 2200);
-    };
-
-    const addToQueue = () => {
-        if (!selectedTrack) return;
-
-        const preparedTrack = {
-            ...selectedTrack,
-            audioUrl: fixUrl(selectedTrack.audioUrl),
-            coverUrl: fixUrl(selectedTrack.coverUrl)
+    useEffect(() => {
+        const reload = () => {
+            setSortOrder(prev => (prev === "desc" ? "asc" : "desc"));
+            setSortOrder(prev => (prev === "asc" ? "desc" : "asc"));
         };
-
-        if (tracks.some((item) => item.id === preparedTrack.id)) {
-            showToast("Трек уже есть в очереди");
-            return;
+        const unsubscribe = libraryEvents.on("favorites", reload);
+        return unsubscribe;
+    }, []);
+    useEffect(() => {
+        if (!user) return;
+        if (activeTab === "public") {
+            setFiltered(allFavorites.filter(t => t.isPublic === true));
+        } else {
+            setFiltered(allFavorites.filter(t => t.userId === user.id));
         }
-
-        setPlaylistName("Любимые треки");
-        setTracks((prev) => [...prev, preparedTrack]);
-        showToast("Трек добавлен в очередь");
+        setSelectedTrack(null);
+    }, [activeTab, allFavorites, user]);
+    const handlePlayTrack = (track) => {
+        if (!track) return;
+        onPlayTrack({
+            ...track,
+            audioUrl: fixUrl(track.audioUrl),
+            coverUrl: fixUrl(track.coverUrl)
+        });
     };
-
-    const playFavorite = (track) => {
-        const preparedQueue = favorites.map((item) => ({
-            ...item,
-            audioUrl: fixUrl(item.audioUrl),
-            coverUrl: fixUrl(item.coverUrl)
-        }));
-
-        setTracks(preparedQueue);
-        setPlaylistName("Любимые треки");
-
-        const preparedTrack = preparedQueue.find((item) => item.id === track.id) || preparedQueue[0];
-        if (preparedTrack) onPlayTrack(preparedTrack);
+    const addToPlaylist = (track) => {
+        const prepared = {
+            ...track,
+            audioUrl: fixUrl(track.audioUrl),
+            coverUrl: fixUrl(track.coverUrl)
+        };
+        setTracks(prev => [...prev, prepared]);
+        setToast("Добавлено в плейлист");
+        setTimeout(() => setToast(null), 2000);
     };
-
-    const removeFavorite = async () => {
-        if (!selectedTrack) return;
-
+    const deleteFavorite = async (track) => {
         try {
-            const res = await authFetch(`${API_URL}/api/playlists/favorites/tracks/${selectedTrack.id}`, {
-                method: "DELETE"
-            });
-
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.error || "Не удалось удалить трек из любимых");
-            }
-
-            setFavorites((prev) => prev.filter((item) => item.id !== selectedTrack.id));
+            await api.delete(`/api/playlists/favorites/tracks/${track.id}`);
+            setAllFavorites(prev => prev.filter(t => t.id !== track.id));
             setSelectedTrack(null);
-            showToast("Трек удалён из любимых");
-        } catch (error) {
-            console.error("Ошибка удаления из любимых:", error);
-            showError(error.message || "Не удалось удалить трек из любимых");
+            setToast("Удалено из любимых");
+            setTimeout(() => setToast(null), 2000);
+        } catch (err) {
+            showError(err.response?.data?.error || "Не удалось удалить из любимых");
         }
     };
-
     return (
         <div className={styles.page}>
-            <TrackFilters
-                title="Любимые треки"
-                sortBy={sortBy}
-                setSortBy={setSortBy}
-                sortOrder={sortOrder}
-                setSortOrder={setSortOrder}
-                type={type}
-                setType={setType}
-                typeOptions={[
-                    { value: "all", label: "Все" },
-                    { value: "seeded", label: "Сидированные" },
-                    { value: "uploaded", label: "Пользовательские" },
-                    { value: "public", label: "Публичные" },
-                    { value: "private", label: "Приватные" }
-                ]}
-            />
-
-            <div className={styles.layout}>
-                <div className={styles.sidebar}>
-                    <h2 className={styles.title}>Список избранного</h2>
-
-                    {favorites.length === 0 && (
-                        <p className={styles.info}>У вас пока нет любимых треков.</p>
-                    )}
-
-                    <div className={styles.list}>
-                        {favorites.map((track) => (
-                            <button
-                                key={track.id}
-                                type="button"
-                                className={`${styles.item} ${selectedTrack?.id === track.id ? styles.active : ""}`}
-                                onClick={() => setSelectedTrack(track)}
-                            >
-                                <img
-                                    src={fixUrl(track.coverUrl) || "/default-cover.png"}
-                                    alt={track.title}
-                                    className={styles.cover}
-                                />
-                                <span className={styles.text}>
-                                    <span className={styles.trackTitle}>{track.title}</span>
-                                    <span className={styles.trackArtist}>{track.artist}</span>
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className={styles.details}>
-                    {!selectedTrack && <p className={styles.info}>Выберите трек слева.</p>}
-
-                    {selectedTrack && (
-                        <>
-                            <img
-                                src={fixUrl(selectedTrack.coverUrl) || "/default-cover.png"}
-                                alt={selectedTrack.title}
-                                className={styles.heroCover}
-                            />
-                            <h3 className={styles.heroTitle}>{selectedTrack.title}</h3>
-                            <p className={styles.heroArtist}>{selectedTrack.artist}</p>
-
-                            <div className={styles.actions}>
-                                <button className="button" onClick={() => playFavorite(selectedTrack)}>
-                                    Слушать
-                                </button>
-                                <button className="button" onClick={addToQueue}>
-                                    В очередь
-                                </button>
-                                <button className="button" onClick={removeFavorite}>
-                                    Убрать из любимых
-                                </button>
-                            </div>
-                        </>
-                    )}
+            <div className={styles.topRow}>
+                <div className={styles.filtersBox}>
+                    <TrackFilters
+                        title={activeTab === "public" ? "Публичные любимые" : "Мои любимые"}
+                        sortBy={sortBy}
+                        setSortBy={setSortBy}
+                        sortOrder={sortOrder}
+                        setSortOrder={setSortOrder}
+                        type={type}
+                        setType={setType}
+                        typeOptions={[
+                            { value: "all", label: "Все" },
+                            { value: "seeded", label: "Сидированные" },
+                            { value: "uploaded", label: "Пользовательские" },
+                            { value: "public", label: "Публичные" },
+                            { value: "private", label: "Приватные" }
+                        ]}
+                        activeTab={activeTab}
+                        setActiveTab={setActiveTab}
+                    />
                 </div>
             </div>
-
+            <div className={styles.grid}>
+                {filtered.map(track => (
+                    <TrackCard
+                        key={track.id}
+                        track={track}
+                        onOpen={() => setSelectedTrack(track)}
+                    />
+                ))}
+            </div>
+            {selectedTrack && (
+                <div className="overlay" onClick={() => setSelectedTrack(null)}>
+                    <TrackModal
+                        track={selectedTrack}
+                        onClose={() => setSelectedTrack(null)}
+                        onPlay={handlePlayTrack}
+                        onAdd={addToPlaylist}
+                        onDelete={deleteFavorite}
+                        user={user}
+                        onAddToPlaylist={(track) => {
+                            setQuickSaveTrack(track);
+                            setShowQuickSave(true);
+                            setSelectedTrack(null);
+                        }}
+                    />
+                </div>
+            )}
+            {showQuickSave && (
+                <QuickSaveModal
+                    track={quickSaveTrack}
+                    onClose={() => setShowQuickSave(false)}
+                />
+            )}
             {toast && <Toast message={toast} />}
         </div>
     );
 }
-
 export default Favorites;

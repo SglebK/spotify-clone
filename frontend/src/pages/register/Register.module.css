@@ -8,30 +8,42 @@
   position: relative;
   padding: 60px 80px;
   width: 1000px;
+
+  background: var(--modal-bg);
+  border: 1px solid var(--modal-border);
   border-radius: 16px;
-  background-color: #ffffff;
-  border: 1px solid #dbe0e4;
-  box-shadow: 0 4px 8px rgba(48, 92, 101, 0.2);
+  box-shadow: var(--shadow-modal);
+
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.dark {
-  background-color: #1e1e1e;
-  border: 1px solid #333;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
-  color: #eee;
+.gridLogin .closeButton {
+  position: absolute !important;
+  top: 22px !important;
+  right: 26px !important;
+  font-size: 28px !important;
+  font-weight: 600 !important;
+  color: #ff4d4d !important;
+  cursor: pointer;
+  opacity: 0.75 !important;
+  transition: opacity 0.2s ease, transform 0.15s ease !important;
 }
 
+.gridLogin .closeButton:hover {
+  opacity: 1 !important;
+  transform: scale(1.12) !important;
+}
 
 .gridHeader {
   text-align: center;
   margin-bottom: 30px;
+  color: var(--text);
 }
 
 .gridForm {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
 }
 
 .gridRow {
@@ -40,16 +52,23 @@
   gap: 6px;
 }
 
-.alert {
-  padding: 10px;
-  background-color: #ffdddd;
-  color: #a00;
-  border-radius: 8px;
+.gridLogin .input {
+  height: 52px !important; 
+  padding: 0 16px !important;
+  font-size: var(--input-font) !important;
+  border-radius: 10px !important;
+}
+
+.gridLogin .button {
+  height: 52px !important;
+  padding: 0 16px !important;
+  font-size: var(--button-font) !important;
+  border-radius: 12px !important;
 }
 
 .gridFooter {
   margin-top: 20px;
   text-align: center;
   opacity: 0.8;
-
+  color: var(--text);
 }

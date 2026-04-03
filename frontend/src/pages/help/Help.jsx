@@ -1,6 +1,5 @@
 import React from "react";
 import styles from "./Help.module.css";
-
 function Help() {
     return (
         <div className={styles.page}>
@@ -17,5 +16,4 @@ function Help() {
         </div>
     );
 }
-
 export default Help;

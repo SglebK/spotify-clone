@@ -1,0 +1,208 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 28px;
+    max-width: 780px;
+    margin: 0 auto;
+    background: var(--card-bg);
+    border-radius: 18px;
+    box-shadow: var(--shadow-lg);
+}
+
+.title {
+    font-size: var(--title-font);
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--text-strong);
+}
+
+.hiddenInput {
+    display: none;
+}
+
+.fileWrapper {
+    margin-top: 6px;
+    margin-bottom: 10px;
+}
+
+.fileButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--button-bg);
+    color: var(--button-text);
+    border: 1px solid var(--button-border);
+    border-radius: 12px;
+    padding: var(--button-padding-y) var(--button-padding-x);
+    font-size: var(--button-font);
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.fileButton:hover {
+    background: var(--button-bg-hover);
+    box-shadow: var(--shadow-md);
+}
+
+.fileButton:active {
+    background: var(--button-bg-active);
+    transform: scale(0.97);
+}
+
+.info {
+    font-size: 15px;
+    opacity: 0.85;
+}
+
+.timeRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+}
+
+.timeRow label {
+    font-weight: 600;
+    color: var(--text-strong);
+}
+
+.timeRow input {
+    width: 54px;
+    height: var(--input-height);
+    text-align: center;
+    font-size: var(--input-font);
+    border-radius: 10px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--input-text);
+    transition: border 0.2s ease, background 0.2s ease;
+}
+
+.timeRow input:focus {
+    border-color: var(--accent);
+    background: var(--input-bg-focus);
+}
+
+.progressContainer {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 0;
+}
+
+.progressContainer span {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.progressContainer input[type="range"] {
+    flex: 1;
+    height: 6px;
+    border-radius: 6px;
+    background: var(--progress-bg);
+    accent-color: var(--accent);
+}
+
+.playFragment,
+.saveButton {
+    background: var(--button-bg);
+    color: var(--button-text);
+    border: 1px solid var(--button-border);
+    border-radius: 12px;
+    padding: var(--button-padding-y) var(--button-padding-x);
+    font-size: var(--button-font);
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.playFragment:hover,
+.saveButton:hover {
+    background: var(--button-bg-hover);
+    box-shadow: var(--shadow-md);
+}
+
+.playFragment:active,
+.saveButton:active {
+    background: var(--button-bg-active);
+    transform: scale(0.97);
+}
+
+@media (max-width: 900px) {
+    .page {
+        padding: 20px;
+    }
+
+    .timeRow {
+        gap: 8px;
+    }
+
+    .timeRow input {
+        width: 48px;
+    }
+
+    .progressContainer {
+        gap: 10px;
+    }
+}
+
+@media (max-width: 600px) {
+    .page {
+        padding: 18px;
+        border-radius: 14px;
+    }
+
+    .title {
+        font-size: calc(var(--title-font) - 4px);
+    }
+
+    .timeRow {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .timeRow input {
+        width: 42px;
+        height: calc(var(--input-height) - 6px);
+    }
+
+    .progressContainer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .progressContainer input[type="range"] {
+        width: 100%;
+    }
+
+    .playFragment,
+    .saveButton {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+@media (max-height: 700px) {
+    .page {
+        padding: 14px;
+    }
+
+    .title {
+        font-size: calc(var(--title-font) - 2px);
+    }
+
+    .timeRow input {
+        height: calc(var(--input-height) - 4px);
+    }
+}
+
+@media (max-height: 600px) {
+    .page {
+        padding: 12px;
+    }
+
+    .timeRow input {
+        height: calc(var(--input-height) - 8px);
+    }
+}

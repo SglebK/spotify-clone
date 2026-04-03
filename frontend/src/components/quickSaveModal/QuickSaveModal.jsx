@@ -1,67 +1,128 @@
 import React, { useEffect, useMemo, useState } from "react";
 import styles from "./QuickSaveModal.module.css";
+import api from "@api/axios";
 
 function QuickSaveModal({
-    playlists = [],
-    defaultPlaylistId = "",
+    track,
+    tracks,
+    playlists: externalPlaylists,
+    preferredPlaylistId = "",
+    saveOnClose = false,
     onClose,
-    onSaveToPlaylist,
-    onCreatePlaylist
+    onSaved
 }) {
-    const [selectedId, setSelectedId] = useState(defaultPlaylistId);
+    const trackList = useMemo(() => {
+        const list = Array.isArray(tracks) ? tracks : track ? [track] : [];
+        return list.filter(t => t?.id);
+    }, [track, tracks]);
+
+    const [playlists, setPlaylists] = useState([]);
+    const [selectedId, setSelectedId] = useState("");
     const [isCreating, setIsCreating] = useState(false);
     const [newTitle, setNewTitle] = useState("");
-    const [hasSaved, setHasSaved] = useState(false);
+
+    useEffect(() => {
+        if (!trackList.length) return;
+
+        if (externalPlaylists?.length) {
+            setPlaylists(externalPlaylists);
+            return;
+        }
+
+        const load = async () => {
+            try {
+                const { data } = await api.get("/api/playlists/my");
+                setPlaylists(data || []);
+            } catch (err) {
+                console.error("Ошибка загрузки плейлистов:", err);
+            }
+        };
+
+        load();
+    }, [externalPlaylists, trackList.length]);
 
     const orderedPlaylists = useMemo(() => {
-        const favorites = playlists.filter((item) => item.isFavorites);
-        const regular = playlists.filter((item) => !item.isFavorites);
-        return [...favorites, ...regular];
+        const fav = playlists.filter(p => p.isFavorites);
+        const reg = playlists.filter(p => !p.isFavorites);
+        return [...fav, ...reg];
     }, [playlists]);
 
     useEffect(() => {
-        setSelectedId(defaultPlaylistId || orderedPlaylists[0]?.id || "");
-    }, [defaultPlaylistId, orderedPlaylists]);
+        const fav = playlists.find(p => p.isFavorites);
+        setSelectedId(preferredPlaylistId || fav?.id || playlists[0]?.id || "");
+    }, [playlists, preferredPlaylistId]);
 
     const saveToPlaylist = async (playlistId) => {
-        if (!playlistId) return;
-        setHasSaved(true);
-        await onSaveToPlaylist?.(playlistId);
+        if (!playlistId || !trackList.length) return;
+
+        try {
+            for (const t of trackList) {
+                if (!t?.id) continue;
+                await api.post("/api/playlist-tracks", {
+                    playlistId,
+                    trackId: t.id
+                });
+            }
+        } catch (err) {
+            console.error("Ошибка добавления треков:", err);
+        }
+
+        onSaved?.(playlistId);
         onClose?.();
     };
 
-    const handleOverlayClose = async () => {
-        if (!hasSaved && defaultPlaylistId) {
-            await saveToPlaylist(defaultPlaylistId);
+    const handleCreate = async () => {
+        if (!newTitle.trim()) return;
+
+        try {
+            const { data } = await api.post("/api/playlists", {
+                title: newTitle.trim()
+            });
+
+            if (data?.id) {
+                setPlaylists(prev => [...prev, data]);
+                await saveToPlaylist(data.id);
+            }
+        } catch (err) {
+            console.error("Ошибка создания плейлиста:", err);
+        }
+    };
+
+    const handleClose = async () => {
+        if (saveOnClose && selectedId) {
+            await saveToPlaylist(selectedId);
             return;
         }
 
         onClose?.();
     };
 
-    const handleCreate = async () => {
-        if (!newTitle.trim()) return;
-        setHasSaved(true);
-        await onCreatePlaylist?.(newTitle.trim());
-        onClose?.();
-    };
+    if (!trackList.length) return null;
 
     return (
-        <div className={styles.overlay} onClick={handleOverlayClose}>
+        <div className={styles.overlay} onClick={handleClose}>
             <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.header}>
                     <div>
-                        <h3 className={styles.title}>Сохранить трек</h3>
+                        <h3 className={styles.title}>
+                            {trackList.length === 1
+                                ? "Сохранить трек"
+                                : `Сохранить очередь (${trackList.length})`}
+                        </h3>
                         <p className={styles.subtitle}>
-                            По умолчанию трек сохранится в любимые, если просто закрыть окно.
+                            {trackList.length === 1
+                                ? "По умолчанию трек сохранится в любимые. Можно выбрать другой плейлист."
+                                : "Все треки очереди будут добавлены в выбранный плейлист."}
                         </p>
                     </div>
-
-                    <button type="button" className={styles.closeButton} onClick={handleOverlayClose}>
+                    <button
+                        type="button"
+                        className={styles.closeButton}
+                        onClick={handleClose}
+                    >
                         ×
                     </button>
                 </div>
-
                 <div className={styles.list}>
                     {orderedPlaylists.map((playlist) => (
                         <button
@@ -77,12 +138,13 @@ function QuickSaveModal({
                                 {playlist.isFavorites ? "Любимые треки" : playlist.title}
                             </span>
                             <span className={styles.itemMeta}>
-                                {playlist.isFavorites ? "Сохранить сюда по умолчанию" : (playlist.description || "Пользовательский плейлист")}
+                                {playlist.isFavorites
+                                    ? "Сохранить сюда по умолчанию"
+                                    : playlist.description || "Пользовательский плейлист"}
                             </span>
                         </button>
                     ))}
                 </div>
-
                 <div className={styles.createSection}>
                     <button
                         type="button"
@@ -91,7 +153,6 @@ function QuickSaveModal({
                     >
                         +
                     </button>
-
                     {isCreating && (
                         <div className={styles.createBox}>
                             <input
@@ -101,7 +162,11 @@ function QuickSaveModal({
                                 className={`input ${styles.input}`}
                                 placeholder="Новый плейлист"
                             />
-                            <button type="button" className={`button ${styles.saveButton}`} onClick={handleCreate}>
+                            <button
+                                type="button"
+                                className={`button ${styles.saveButton}`}
+                                onClick={handleCreate}
+                            >
                                 Сохранить
                             </button>
                         </div>

@@ -1,0 +1,53 @@
+.card {
+  background: var(--button-bg);
+  border: 1px solid var(--button-border);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+.cover {
+  width: 100%;
+  height: auto;
+  max-height: 90px;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.trackTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artist {
+  font-size: 14px;
+  opacity: 0.8;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 600px) {
+  .cover {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 400px) {
+  .cover {
+    max-height: 200px;
+  }
+}

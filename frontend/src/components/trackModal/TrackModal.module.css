@@ -1,0 +1,171 @@
+.modal {
+  position: relative;
+  background: var(--bg);
+  border-radius: 16px;
+  padding: 22px;
+  width: 90%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: scaleIn 0.2s ease;
+  border: 1px solid var(--button-border);
+}
+
+.closeButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.closeButton::before,
+.closeButton::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 2.5px;
+  background: #ff4d4d;
+  transform-origin: center;
+}
+
+.closeButton::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.closeButton::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.closeButton:hover::before,
+.closeButton:hover::after {
+  background: #ff1a1a;
+}
+
+.cover {
+  width: 100%;
+  border-radius: 12px;
+  object-fit: contain;
+}
+
+/* ТЕКСТ */
+.modal h2 {
+  font-size: 20px;
+  margin: 0;
+  color: var(--text);
+}
+
+.modal p {
+  font-size: 15px;
+  opacity: 0.8;
+  margin: 0;
+  color: var(--text);
+}
+
+.buttonGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.modal button:not(.closeButton) {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 15px;
+  border: 1px solid var(--button-border);
+  background: var(--button-bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.download {
+  background: #e6f3ff;
+  border: 1px solid #a8d4ff;
+  color: #0057a3;
+}
+
+.download:hover {
+  background: #d4eaff;
+}
+
+.makePrivate {
+  background: #fff7d6;
+  border: 1px solid #ffe08a;
+  color: #8a6d00;
+}
+
+.makePrivate:hover {
+  background: #ffefb3;
+}
+
+.delete {
+  background: #ffdddd;
+  border: 1px solid #ffb3b3;
+  color: #d40000;
+}
+
+.delete:hover {
+  background: #ffcccc;
+}
+
+.privacyToggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.privacyToggle input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--button-border);
+  border-radius: 6px;
+  background: var(--bg);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.privacyToggle input[type="checkbox"]:hover {
+  border-color: var(--accent, #4caf50);
+}
+
+.privacyToggle input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 6px;
+  border-left: 3px solid var(--accent, #4caf50);
+  border-bottom: 3px solid var(--accent, #4caf50);
+  transform: rotate(-45deg) scale(0);
+  top: 4px;
+  left: 4px;
+  transition: transform 0.15s ease;
+}
+
+.privacyToggle input[type="checkbox"]:checked {
+  border-color: var(--accent, #4caf50);
+  background: rgba(76, 175, 80, 0.15);
+}
+
+.privacyToggle input[type="checkbox"]:checked::after {
+  transform: rotate(-45deg) scale(1);
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}

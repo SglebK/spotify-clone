@@ -1,15 +1,38 @@
-/*src/layout/2aside/Aside.module.css*/
-/* Ссылки */
-
-
-ul {
-  list-style: none;
+.aside {
+  position: relative;
+  width: 200px;
+  transition: transform 0.3s ease;
 }
 
-/* Контейнер */
+.grid2 :global(.button):focus-visible,
+.grid2 :global(.button):focus {
+  outline: 1px solid var(--button-border);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (max-width: 900px) {
+  .aside {
+    position: fixed;
+    top: 108px;
+    left: 0;
+    width: min(320px, 84vw);
+    height: calc(100vh - 108px);
+    background: var(--bg);
+    border-right: 1px solid var(--button-border);
+    transform: translateX(-100%);
+    z-index: 2000;
+    box-shadow: 0 16px 28px var(--button-shadow);
+  }
+
+  .aside.open {
+    transform: translateX(0);
+  }
+}
+
 .grid2 {
   display: grid;
-  grid-template-rows: 40px 40px 40px 10px 40px 10px 40px 40px 40px 40px;
+  grid-template-rows: 40px 40px 40px 10px 40px 10px 40px 40px 40px 40px 40px;
   grid-template-areas:
     'grid21'
     'grid22'
@@ -20,38 +43,22 @@ ul {
     'grid25'
     'grid26'
     'grid27'
-    'grid28';
+    'grid28'
+    'grid29';
   padding: 20px;
   row-gap: 10px;
-  height: 100%;
-  align-content: start;
-  /*border: 1px solid rgb(245, 6, 26);*/
 }
 
-.grid21 {
-  grid-area: grid21;
-}
-.grid22 {
-  grid-area: grid22;
-}
-.grid23 {
-  grid-area: grid23;
-}
-.grid24 {
-  grid-area: grid24;
-}
-.grid25 {
-  grid-area: grid25;
-}
-.grid26 {
-  grid-area: grid26;
-}
-.grid27 {
-  grid-area: grid27;
-}
-.grid28 {
-  grid-area: grid28;
-}
+.grid21 { grid-area: grid21; }
+.grid22 { grid-area: grid22; }
+.grid23 { grid-area: grid23; }
+.grid24 { grid-area: grid24; }
+.grid25 { grid-area: grid25; }
+.grid26 { grid-area: grid26; }
+.grid27 { grid-area: grid27; }
+.grid28 { grid-area: grid28; }
+.grid29 { grid-area: grid29; }
+
 .grid21,
 .grid22,
 .grid23,
@@ -59,16 +66,16 @@ ul {
 .grid25,
 .grid26,
 .grid27,
-.grid28{
+.grid28,
+.grid29 {
   font-size: 14px;
 }
 
-/* Разделитель */
-.divider1 {
-  grid-area: divider1;
-}
-.divider2 {
-  grid-area: divider2;
+.grid2 :global(.button) {
+  height: 40px;
+  line-height: 40px;
+  padding: 0;
+  text-align: center;
 }
 
 .divider1,
@@ -80,53 +87,38 @@ ul {
   border-radius: 1px;
 }
 
+.heart {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+}
+
+.heart svg {
+  width: 18px;
+  height: 18px;
+}
+
 @media (max-width: 900px) {
   .grid2 {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-
-  .divider1,
-  .divider2 {
     display: none;
   }
 
-  .grid21,
-  .grid22,
-  .grid23,
-  .grid24,
-  .grid25,
-  .grid26,
-  .grid27,
-  .grid28 {
-    flex: 0 0 auto;
-    min-width: max-content;
-    padding: 8px 14px;
-    border: 1px solid var(--button-border);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.03);
+  .aside.open .grid2 {
+    display: grid;
+    height: 100%;
+    overflow-y: auto;
   }
 }
 
 @media (max-width: 640px) {
-  .grid2 {
-    padding: 10px 12px;
-    gap: 8px;
+  .aside {
+    top: 116px;
+    width: 100vw;
+    height: calc(100vh - 116px);
   }
 
-  .grid21,
-  .grid22,
-  .grid23,
-  .grid24,
-  .grid25,
-  .grid26,
-  .grid27,
-  .grid28 {
-    font-size: 13px;
-    padding: 7px 12px;
+  .grid2 {
+    padding: 16px 14px 24px;
   }
 }

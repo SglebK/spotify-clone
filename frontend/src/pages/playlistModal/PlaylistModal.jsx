@@ -1,8 +1,5 @@
-// src/pages/playlistModal/PlaylistModal.jsx
-
 import React, { useEffect, useMemo, useState } from "react";
 import styles from "./PlaylistModal.module.css";
-
 function PlaylistModal({
     tracks,
     currentTrack,
@@ -14,41 +11,32 @@ function PlaylistModal({
     playlistNameInitial,
     onClearTempPlaylist
 }) {
-    // Footer queue and saved playlists share one modal so users do not learn two different flows.
     const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
     const [playlistName, setPlaylistName] = useState("");
     const [selectedExistingId, setSelectedExistingId] = useState("");
-
     const title = playlistNameInitial || "Плейлист";
-
     const otherTracks = (tracks || []).filter(t => t.id !== currentTrack?.id);
     const availablePlaylists = useMemo(() => existingPlaylists.filter(
         (playlist) =>
             !playlist.isFavorites &&
             (!playlistNameInitial || playlist.title !== playlistNameInitial)
     ), [existingPlaylists, playlistNameInitial]);
-
     useEffect(() => {
         setSelectedExistingId(availablePlaylists[0]?.id || "");
     }, [availablePlaylists]);
-
     const handleConfirmSave = () => {
         if (isCreatingPlaylist) {
             if (!playlistName.trim()) return;
-
             onSavePlaylist(playlistName.trim(), tracks);
             onClose();
             return;
         }
-
         if (!selectedExistingId) return;
         onAddToExisting?.(selectedExistingId, tracks);
     };
-
     return (
         <div className={styles.overlay} onClick={onClose}>
-            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-                
+            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>                
                 <div className={styles.header}>
                     <div>
                         <h2>{title}</h2>
@@ -56,7 +44,6 @@ function PlaylistModal({
                             Выберите плейлист для сохранения очереди или создайте новый через плюс.
                         </p>
                     </div>
-
                     <div className={styles.headerActions}>
                         <button
                             className={`button ${styles.smallButton} ${styles.deleteBtn}`}
@@ -67,11 +54,9 @@ function PlaylistModal({
                         >
                             Очистить
                         </button>
-
                         <button className={styles.closeBtn} onClick={onClose}>×</button>
                     </div>
                 </div>
-
                 <div className={styles.savePanel}>
                     <div className={styles.saveHeader}>
                         <span className={styles.sectionLabel}>Сохранение в плейлист</span>
@@ -84,7 +69,6 @@ function PlaylistModal({
                             +
                         </button>
                     </div>
-
                     {isCreatingPlaylist && (
                         <div className={styles.nameModal}>
                             <input
@@ -96,7 +80,6 @@ function PlaylistModal({
                             />
                         </div>
                     )}
-
                     {!isCreatingPlaylist && availablePlaylists.length > 0 && (
                         <div className={styles.existingList}>
                             {availablePlaylists.map((playlist) => (
@@ -114,13 +97,11 @@ function PlaylistModal({
                             ))}
                         </div>
                     )}
-
                     {!isCreatingPlaylist && availablePlaylists.length === 0 && (
                         <div className={styles.emptyPlaylists}>
                             У вас пока нет обычных плейлистов. Нажмите плюс и создайте первый.
                         </div>
                     )}
-
                     <div className={styles.nameButtons}>
                         <button
                             className={`button ${styles.smallButton}`}
@@ -129,7 +110,6 @@ function PlaylistModal({
                         >
                             Сохранить
                         </button>
-
                         {isCreatingPlaylist && (
                             <button
                                 className={`button ${styles.smallButton}`}
@@ -140,11 +120,9 @@ function PlaylistModal({
                         )}
                     </div>
                 </div>
-
                 {currentTrack && (
                     <div className={styles.nowPlayingBlock}>
                         <div className={styles.nowPlayingLabel}>Сейчас играет</div>
-
                         <div
                             className={`${styles.item} ${styles.active}`}
                             onClick={() => onSelect(currentTrack, true)}
@@ -154,7 +132,6 @@ function PlaylistModal({
                         </div>
                     </div>
                 )}
-
                 <div className={styles.list}>
                     {otherTracks.map((track) => (
                         <div
@@ -166,15 +143,12 @@ function PlaylistModal({
                             <div className={styles.artist}>{track.artist}</div>
                         </div>
                     ))}
-
                     {otherTracks.length === 0 && !currentTrack && (
                         <div className={styles.noTracks}>Плейлист пуст</div>
                     )}
                 </div>
-
             </div>
         </div>
     );
 }
-
 export default PlaylistModal;

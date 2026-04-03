@@ -1,40 +1,30 @@
-/*src/pages/myUploads/MyUploads.module.css*/
-/* -----------------------------------------
-   ОБЩИЙ КОНТЕЙНЕР СТРАНИЦЫ
------------------------------------------ */
-.grid3 {
-    width: 100%;
-    height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    gap: 18px;
-    padding: 24px;
-    box-sizing: border-box;
-    transition: background 0.3s, color 0.3s;
+.page {
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px;
 }
 
-/* -----------------------------------------
-   ДВЕ КОЛОНКИ
------------------------------------------ */
-.grid31 {
-    width: 100%;
-    height: 100%;
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 24px;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+  padding-bottom: 22px;
 }
 
-/* Адаптивность */
 @media (max-width: 900px) {
-    .grid31 {
-        grid-template-columns: 1fr;
-    }
+  .page {
+    padding: 16px 14px 20px;
+  }
 
-    .grid311 {
-        max-height: 260px;
-    }
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  .grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px;
+  }
 }
