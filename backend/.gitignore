@@ -3,8 +3,7 @@ node_modules
 # .env
 # backend/.env
 
-# uploads contain user media
-/uploads/
+# uploads are committed in this demo repo so GitHub zip works with media out of the box
 
 # database file (SQLite) and prisma client
 dev.db
