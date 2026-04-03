@@ -1,13 +1,16 @@
 .grid3 {
   display: flex;
   justify-content: center;
-  margin-top: 1%;
+  width: 100%;
+  padding: 18px 14px 24px;
+  box-sizing: border-box;
 }
 
 .gridLogin {
   position: relative;
-  padding: 60px 80px;
-  width: 1000px;
+  padding: 48px 56px;
+  width: min(100%, 760px);
+  box-sizing: border-box;
 
   background: var(--modal-bg);
   border: 1px solid var(--modal-border);
@@ -71,4 +74,49 @@
   text-align: center;
   opacity: 0.8;
   color: var(--text);
+}
+
+@media (max-width: 900px) {
+  .grid3 {
+    padding: 14px 12px 22px;
+  }
+
+  .gridLogin {
+    padding: 30px 24px 24px;
+  }
+}
+
+@media (max-width: 560px) {
+  .grid3 {
+    padding: 10px 10px 18px;
+  }
+
+  .gridLogin {
+    padding: 20px 14px 18px;
+    border-radius: 12px;
+  }
+
+  .gridHeader {
+    margin-bottom: 18px;
+    font-size: 24px;
+  }
+
+  .gridForm {
+    gap: 16px;
+  }
+
+  .gridRow {
+    gap: 4px;
+  }
+
+  .gridLogin .closeButton {
+    top: 12px !important;
+    right: 14px !important;
+    font-size: 24px !important;
+  }
+
+  .gridFooter {
+    margin-top: 14px;
+    font-size: 13px;
+  }
 }

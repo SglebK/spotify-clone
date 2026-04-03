@@ -34,8 +34,13 @@ export function useFooter42Logic(track, volume, onNextTrack, hasNextTrack) {
         audio.playbackRate = speedRef.current;
         setCurrentTime(0);
         setDuration(0);
-        audio.play().catch(() => {});
-        setIsPlaying(true);
+        if (track.__autoplay) {
+            audio.play().catch(() => {});
+            setIsPlaying(true);
+            return;
+        }
+        audio.pause();
+        setIsPlaying(false);
     }, [track]);
     useEffect(() => {
         const audio = audioRef.current;

@@ -9,6 +9,7 @@ import { QueueModal } from "@components";
 const PLAYER_TRACK_KEY = 'spotify-clone-current-track';
 const PLAYER_QUEUE_KEY = 'spotify-clone-player-queue';
 const PLAYER_NAME_KEY = 'spotify-clone-player-playlist-name';
+
 function readStoredValue(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -17,12 +18,19 @@ function readStoredValue(key, fallback) {
     return fallback;
   }
 }
+
+function normalizeStoredTrack(track) {
+  if (!track) return null;
+  const { __autoplay, ...safeTrack } = track;
+  return safeTrack;
+}
+
 function App() {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("theme") || "light";
   });
   const [currentTrack, setCurrentTrackState] = useState(() =>
-    readStoredValue(PLAYER_TRACK_KEY, null)
+    normalizeStoredTrack(readStoredValue(PLAYER_TRACK_KEY, null))
   );
   const [tracks, setTracks] = useState(() =>
     readStoredValue(PLAYER_QUEUE_KEY, [])
@@ -32,15 +40,26 @@ function App() {
   );
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [volume, setVolume] = useState(0.1);
-  const setCurrentTrack = (nextTrack) => {
-    setCurrentTrackState(nextTrack || null);
+  const setCurrentTrack = (nextTrack, options = {}) => {
+    if (!nextTrack) {
+      setCurrentTrackState(null);
+      return;
+    }
+
+    setCurrentTrackState({
+      ...nextTrack,
+      __autoplay: options.autoplay ?? true
+    });
   };
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
   useEffect(() => {
-    localStorage.setItem(PLAYER_TRACK_KEY, JSON.stringify(currentTrack));
+    localStorage.setItem(
+      PLAYER_TRACK_KEY,
+      JSON.stringify(normalizeStoredTrack(currentTrack))
+    );
   }, [currentTrack]);
   useEffect(() => {
     localStorage.setItem(PLAYER_QUEUE_KEY, JSON.stringify(tracks));
@@ -57,8 +76,8 @@ function App() {
       return [currentTrack, ...prev];
     });
   }, [currentTrack]);
-  const handlePlayTrack = (track) => {
-    setCurrentTrack(track || null);
+  const handlePlayTrack = (track, options) => {
+    setCurrentTrack(track || null, options);
   };
   return (
     <Router>
