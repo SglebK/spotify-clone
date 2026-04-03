@@ -24,8 +24,17 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo [1/5] Preparing backend Prisma files...
+echo [1/6] Installing backend dependencies...
 pushd "%ROOT%backend"
+call npm install
+if errorlevel 1 (
+  echo [ERROR] backend npm install failed.
+  popd
+  pause
+  exit /b 1
+)
+
+echo [2/6] Preparing backend Prisma files...
 call npx prisma db push
 if errorlevel 1 (
   echo [ERROR] prisma db push failed.
@@ -43,10 +52,21 @@ if errorlevel 1 (
 )
 popd
 
-echo [2/5] Starting backend...
+echo [3/6] Installing frontend dependencies...
+pushd "%ROOT%frontend"
+call npm install
+if errorlevel 1 (
+  echo [ERROR] frontend npm install failed.
+  popd
+  pause
+  exit /b 1
+)
+popd
+
+echo [4/6] Starting backend...
 start "Spotify Backend" cmd /k "cd /d ""%ROOT%backend"" && npm run dev"
 
-echo [3/5] Opening backend tunnel...
+echo [5/6] Opening backend tunnel...
 start "Spotify Backend Tunnel" cmd /k "cloudflared tunnel --url http://localhost:5000"
 
 echo.
@@ -61,10 +81,8 @@ if "%BACKEND_URL%"=="" (
   exit /b 1
 )
 
-echo [4/5] Starting frontend with external API URL...
+echo [6/6] Starting frontend with external API URL...
 start "Spotify Frontend" cmd /k "cd /d ""%ROOT%frontend"" && set ""VITE_API_URL=%BACKEND_URL%"" && npm run dev:share"
-
-echo [5/5] Opening frontend tunnel...
 start "Spotify Frontend Tunnel" cmd /k "cloudflared tunnel --url http://localhost:5173"
 
 echo.
@@ -73,4 +91,3 @@ echo Send that FRONTEND URL to other people.
 echo.
 echo Backend API URL: %BACKEND_URL%
 pause
-

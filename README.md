@@ -41,6 +41,7 @@ Backend по умолчанию запускается на `http://localhost:50
 - `backend/.env` уже лежит в репозитории специально для демонстрации и запуска на другом компьютере
 - поэтому после скачивания zip не нужно отдельно создавать `.env` руками
 - это demo-конфиг для локального запуска, а не production-секреты
+- bat-файлы сначала устанавливают локальные зависимости проекта, чтобы не подтягивалась чужая Prisma 7 через `npx`
 
 ### 2. Запуск frontend
 
@@ -68,8 +69,10 @@ start-local.bat
 ```
 
 Что делает файл:
+- выполняет `npm install` в `backend`
 - выполняет `npx prisma db push`
 - выполняет `npx prisma generate`
+- выполняет `npm install` в `frontend`
 - открывает отдельное окно backend
 - открывает отдельное окно frontend
 
@@ -82,8 +85,10 @@ start-share.bat
 ```
 
 Что делает файл:
+- выполняет `npm install` в `backend`
 - выполняет `npx prisma db push`
 - выполняет `npx prisma generate`
+- выполняет `npm install` в `frontend`
 - запускает backend
 - открывает туннель для backend
 - просит вставить backend URL
