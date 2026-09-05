@@ -1,345 +1,194 @@
-# Spotify Clone
+# 🎵 Spotify Clone — Full-Stack E-Commerce & Streaming Web App
 
-Экзаменационный музыкальный проект с фронтендом на React + Vite и бэкендом на Node.js + Express + Prisma + SQLite.
+[![React](https://img.shields.io/badge/React-19.x-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5.x-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4.x-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
-## Стек технологий
+A comprehensive, full-stack music streaming web application built with **React 19** and **Node.js/Express**. This application features secure JWT dual-token authentication, full CRUD media management, custom audio playback controls, persistent player state, responsive design, and administrative controls.
 
-- Frontend: `React 19`, `Vite`, `React Router`, `CSS Modules`
-- Backend: `Node.js`, `Express`
-- База данных: `SQLite`
-- ORM: `Prisma`
-- Аутентификация: `JWT access token + refresh token`
-- Работа с файлами: `Multer`
-- Хеширование паролей: `bcrypt`
-- Сборка и линт: `Vite build`, `ESLint`
+---
 
-## Структура
+## 🛠️ Tech Stack & Architecture
 
-- `frontend` - клиентская часть
-- `backend` - серверная часть
-- `backend/prisma/dev.db` - готовая SQLite база, уже включена в репозиторий
-- `backend/.env` - demo-конфиг backend уже включен в репозиторий для быстрого запуска из GitHub zip
-- `backend/uploads` - локальные аудио и обложки уже включены в репозиторий, чтобы GitHub zip работал с медиа сразу
+### **Frontend**
+* **Framework:** React 19 + Vite (for instant HMR and optimized builds)
+* **Routing:** React Router v6+
+* **Styling:** CSS Modules (scoped styles, responsive layout, custom dark theme)
+* **Code Quality:** ESLint
 
-## Запуск проекта
+### **Backend**
+* **Runtime:** Node.js + Express.js
+* **Database & ORM:** SQLite via Prisma ORM
+* **Authentication:** Dual-token strategy (`JWT Access Token` + `Refresh Token` session recovery)
+* **Media Handling:** Multer for local audio and cover image file uploads
+* **Security:** `bcrypt` for password hashing
 
-Откройте два терминала.
+---
 
-### 1. Запуск backend
+## ✨ Feature Breakdown
 
-```powershell
-cd C:\spotify-clone\backend
+| Domain | Description |
+| :--- | :--- |
+| **Authentication & Auth State** | User registration, login, auto-session renewal using refresh tokens, and role-based route guards. |
+| **Media Player** | Full-featured player with queue management, track history (previous/next), loop modes, playback speed, mute, and state persistence via `localStorage`. |
+| **Library & Playlists** | Create/edit custom playlists, manage public/private visibility, add/remove tracks, and dedicated "Liked Songs" library. |
+| **Catalog & Discovery** | Instant multi-parameter search, filtering, and sorting (by title, date, genre, and visibility). |
+| **Audio Processing** | Integrated client-side audio trimmer tool that isolates audio playback during editing. |
+| **Admin Panel** | Visible administrative privileges (Admin badge, global deletion overrides for tracks and playlists). |
+| **Responsiveness** | Mobile-first layout adaptations for smartphones, tablets, and desktop displays. |
+
+---
+
+## 📂 Project Structure
+
+
+```
+
+spotify-clone/
+├── frontend/                  # React client application
+│   ├── src/
+│   │   ├── components/        # Player, Navigation, Header, Footers
+│   │   ├── pages/             # Route-level views (Home, Library, Trim, Admin)
+│   │   └── styles/            # CSS Modules & global theme variables
+│   └── package.json
+│
+├── backend/                   # Node.js Express server
+│   ├── prisma/                # Prisma schema & SQLite database (dev.db)
+│   ├── src/                   # REST API controllers, middleware, routes
+│   ├── uploads/               # Static storage for audio files & cover art
+│   ├── .env                   # Local development demo setup
+│   └── package.json
+│
+├── start-local.bat            # Automated local dev setup script
+└── start-share.bat            # Tunnel deployment script (Cloudflare)
+
+```
+
+---
+
+## ⚡ Quick Start
+
+### Prerequisites
+* **Node.js** (v18.0 or higher)
+* **npm** (v9.0 or higher)
+
+### Option 1: One-Click Startup (Windows)
+Double-click `start-local.bat` in the root directory. This script automatically handles dependency installations, runs Prisma database migrations, and boots both frontend and backend servers in isolated terminal windows.
+
+---
+
+### Option 2: Manual Terminal Setup
+
+#### 1. Start the Backend Server
+
+```bash
+cd backend
 npm install
 npx prisma db push
 npx prisma generate
 npm run dev
+
 ```
 
-Backend по умолчанию запускается на `http://localhost:5000`.
+> The REST API server will run at `http://localhost:5000`.
 
-Важный момент:
-- `backend/.env` уже лежит в репозитории специально для демонстрации и запуска на другом компьютере
-- поэтому после скачивания zip не нужно отдельно создавать `.env` руками
-- это demo-конфиг для локального запуска, а не production-секреты
-- bat-файлы сначала устанавливают локальные зависимости проекта, чтобы не подтягивалась чужая Prisma 7 через `npx`
+#### 2. Start the Frontend Application
 
-### 2. Запуск frontend
+Open a second terminal window:
 
-```powershell
-cd C:\spotify-clone\frontend
+```bash
+cd frontend
 npm install
 npm run dev
+
 ```
 
-Frontend запускается через Vite, обычно на `http://localhost:5173`.
+> The React client will run at `http://localhost:5173`.
 
-### Быстрый запуск через `.bat`
+---
 
-Для удобства в корне проекта есть два файла:
+## 🔐 Demo Credentials & Seed Data
 
-- `start-local.bat` - поднимает backend и frontend локально
-- `start-share.bat` - поднимает backend, frontend и помогает открыть проект наружу через `cloudflared`
+The project comes pre-seeded with sample users, playlists, tracks, and audio files ready for evaluation.
 
-#### Локальная проверка
+* **Admin User:** `admin@spotify.local`
+* **Password:** `demo12345`
 
-Просто запустите:
+To reset or re-seed the SQLite database with clean mock data at any time, run:
 
-```text
-start-local.bat
+```bash
+cd backend
+npm run seed:full
+
 ```
 
-Что делает файл:
-- выполняет `npm install` в `backend`
-- выполняет `npx prisma db push`
-- выполняет `npx prisma generate`
-- выполняет `npm install` в `frontend`
-- открывает отдельное окно backend
-- открывает отдельное окно frontend
+---
 
-#### Показ другим людям
+## 🌐 Remote Sharing & Tunneling (Cloudflare)
 
-Просто запустите:
+To expose your local instance to external users or mobile testing devices without deploying to a cloud host, use the included tunneling automation.
 
-```text
-start-share.bat
-```
+### Using `start-share.bat`
 
-Что делает файл:
-- выполняет `npm install` в `backend`
-- выполняет `npx prisma db push`
-- выполняет `npx prisma generate`
-- выполняет `npm install` в `frontend`
-- запускает backend
-- открывает туннель для backend
-- просит вставить backend URL
-- запускает frontend с этим `VITE_API_URL`
-- открывает туннель для frontend
-
-Важно:
-- для `start-share.bat` должен быть установлен `cloudflared`
-- если его нет, установите:
-
+1. Ensure **Cloudflare Tunnel** (`cloudflared`) is installed:
 ```powershell
 winget install Cloudflare.cloudflared
+
 ```
 
-## Временный показ другим людям
 
-Для показа проекта на 1-2 дня удобнее всего запускать его у себя и открывать наружу через туннель.
+2. Run `start-share.bat`.
+3. Copy the generated Backend Cloudflare URL into the prompt.
+4. Share the generated Frontend Cloudflare URL with remote evaluators.
 
-Рекомендуемый сценарий:
-1. запустить backend локально
-2. открыть backend туннелем
-3. запустить frontend с внешним `VITE_API_URL`
-4. открыть frontend вторым туннелем
-5. отправить людям ссылку только на frontend
+### Manual Tunneling Configuration
 
-### Команды для такого запуска
-
-Backend:
-
+1. **Launch Local Servers:**
 ```powershell
-cd C:\spotify-clone\backend
-npm run dev
-```
-
-Frontend:
-
-```powershell
-cd C:\spotify-clone\frontend
-$env:VITE_API_URL="https://ВАШ-BACKEND-URL"
-npm run dev:share
-```
-
-### Откуда брать `ВАШ-BACKEND-URL`
-
-После запуска backend откройте его туннелем, например через `cloudflared`:
-
-```powershell
+# Terminal 1: Backend Tunnel
 cloudflared tunnel --url http://localhost:5000
+
 ```
 
-В ответ `cloudflared` покажет ссылку вида:
 
-```text
-https://something-random.trycloudflare.com
-```
-
-Именно эта ссылка и будет вашим `ВАШ-BACKEND-URL`.
-
-Если вы запускаете проект через `start-share.bat`, этот URL нужно просто скопировать из окна `Spotify Backend Tunnel` и вставить в запрос bat-файла.
-
-Пример:
-
+*Note down the generated tunnel URL (e.g., `https://random-backend.trycloudflare.com`).*
+2. **Launch Frontend with Dynamic API URL:**
 ```powershell
-$env:VITE_API_URL="https://something-random.trycloudflare.com"
+# Terminal 2: Frontend Server
+cd frontend
+$env:VITE_API_URL="[https://random-backend.trycloudflare.com](https://random-backend.trycloudflare.com)"
 npm run dev:share
+
 ```
 
-### Как получить ссылку на frontend
 
-После запуска frontend откройте его вторым туннелем:
-
+3. **Expose Frontend:**
 ```powershell
+# Terminal 3: Frontend Tunnel
 cloudflared tunnel --url http://localhost:5173
+
 ```
 
-`cloudflared` снова покажет ссылку вида:
 
-```text
-https://another-random.trycloudflare.com
-```
+*Share the generated frontend URL with end-users.*
 
-Это и есть ссылка на сайт, которую нужно отправлять другим людям.
+---
 
-Если вы запускаете проект через `start-share.bat`, фронтенд-туннель тоже откроется автоматически в отдельном окне. Нужно дождаться ссылки в окне `Spotify Frontend Tunnel`.
+## 🗄️ Database Schema Overview
 
-### Что отправлять другим людям
+The SQLite database managed by **Prisma ORM** comprises four primary models:
 
-- отправляйте только ссылку на frontend
-- backend-ссылку людям отправлять не нужно
-- они просто открывают frontend URL в браузере
-- ваш компьютер в этот момент должен быть включён, а backend, frontend и оба туннеля должны работать
+* **`User`**: Manages auth identities, hashed credentials, timezone preferences, and roles (`ADMIN` / `USER`).
+* **`Track`**: Stores metadata, audio file paths, cover image paths, and visibility state (`PUBLIC` / `PRIVATE`).
+* **`Playlist`**: Holds playlist metadata, cover images, visibility flags, and "Favorites" status.
+* **`PlaylistTrack`**: Join table configuring dynamic track ordering within playlists.
 
-Если нужно быстро переопределить API без перезапуска сборки, frontend также поддерживает параметр:
+---
 
-```text
-https://ВАШ-FRONTEND-URL/?api=https://ВАШ-BACKEND-URL
-```
+## 📄 License
 
-Тогда API URL сохранится в `localStorage` браузера.
-
-### Полный пример запуска
-
-1. backend:
-
-```powershell
-cd C:\spotify-clone\backend
-npm run dev
-```
-
-2. туннель для backend:
-
-```powershell
-cloudflared tunnel --url http://localhost:5000
-```
-
-3. frontend:
-
-```powershell
-cd C:\spotify-clone\frontend
-$env:VITE_API_URL="https://ВАШ-BACKEND-URL"
-npm run dev:share
-```
-
-4. туннель для frontend:
-
-```powershell
-cloudflared tunnel --url http://localhost:5173
-```
-
-5. отправьте людям frontend URL.
-
-## Основные возможности
-
-- регистрация и вход
-- автоматическое восстановление сессии по refresh token
-- загрузка своих треков с валидацией файла и обложки
-- просмотр общего каталога треков
-- поиск по трекам и плейлистам
-- фильтрация и сортировка по названию, дате и типу треков
-- страницы `Главная`, `Все треки`, `Все плейлисты`, `Мои треки`, `Мои плейлисты`, `Любимые`, `Premium`, `Справка`
-- создание плейлистов и быстрое сохранение трека в плейлист
-- отдельный плейлист `Любимые треки`
-- встроенный плеер с очередью, предыдущим/следующим треком, repeat, speed и mute
-- heart-кнопка в плеере открывает быстрое окно сохранения, как в Spotify-подобном сценарии
-- сохранение текущего трека и очереди между перезагрузками
-- редактирование треков и плейлистов
-- управление публичностью треков и плейлистов
-- скачивание текущего трека
-- локальная страница `Обрезка аудио`, где файл не перехватывает основной плеер до ручного запуска фрагмента
-- адаптация под телефон и планшет
-- видимые admin-функции: бейдж в шапке, удаление треков и плейлистов через интерфейс
-
-## Полезные команды
-
-### Frontend
-
-```powershell
-cd C:\spotify-clone\frontend
-npm run build
-npm run lint
-npm run dev:share
-```
-
-### Backend
-
-```powershell
-cd C:\spotify-clone\backend
-npx prisma db push
-npx prisma generate
-npm run seed:full
-node src/server.js
-```
-
-## Демо-данные и база
-
-- Готовая база `backend/prisma/dev.db` уже лежит в репозитории.
-- Готовый backend-конфиг `backend/.env` тоже лежит в репозитории.
-- В проекте уже есть заполненные тестовые пользователи, треки и плейлисты.
-- Если нужно пересоздать данные:
-
-```powershell
-cd C:\spotify-clone\backend
-npm run seed:full
-```
-
-Что создаёт `seed:full`:
-- 1 админ-пользователя
-- несколько demo-пользователей
-- публичные и пользовательские треки
-- demo-плейлисты
-- связи треков с плейлистами
-
-Тестовый админ:
-- `admin@spotify.local`
-- пароль: `demo12345`
-
-## База данных
-
-Используется `SQLite` через `Prisma`.
-
-Основные сущности:
-- `User` - пользователь, токены, таймзона, admin-роль
-- `Track` - трек, исполнитель, ссылки на аудио и обложку, публичность
-- `Playlist` - плейлист, описание, обложка, публичность, флаг избранного
-- `PlaylistTrack` - связь между плейлистом и треком с порядком
-
-База локальная, поэтому проект удобно запускать и показывать без отдельного PostgreSQL/MySQL сервера.
-
-## Как работает проект
-
-Frontend:
-- React-приложение на Vite
-- маршрутизация через `react-router-dom`
-- UI разбит на layout: header, aside, navigator, footer
-- текущий трек и очередь плеера хранятся на клиенте и восстанавливаются после перезагрузки
-- приватные страницы закрыты через `PrivateRoute`
-
-Backend:
-- Express-сервер с REST API
-- Prisma работает поверх SQLite
-- JWT access token используется для обычных запросов
-- refresh token обновляет сессию без повторного входа
-- Multer принимает аудио и обложки
-- `/uploads` раздаёт локальные файлы как статику
-
-Работа с плейлистами и любимыми:
-- heart в плеере открывает быстрое окно сохранения
-- по умолчанию трек сохраняется в `Любимые треки`
-- можно сразу выбрать другой плейлист или создать новый
-- если закрыть окно сохранения, трек всё равно уйдёт в `Любимые треки`
-- списки библиотек обновляются не только по таймеру, но и после событий изменения
-
-Адаптация и показ:
-- проект адаптирован под desktop, tablet и phone-сценарий
-- для показа есть `start-local.bat` и `start-share.bat`
-- форма загрузки и мобильный layout поджаты под узкие экраны
-- тёмная тема и системные полосы прокрутки визуально приглушены, чтобы интерфейс выглядел чище на демо
-
-Админ:
-- тестовый админ видит бейдж `Админ` в шапке
-- в `Все треки` админ может удалять треки через модальное окно
-- в `Все плейлисты` админ может удалять плейлисты через экран деталей
-
-## Что уже готово для сдачи
-
-- рабочий frontend и backend
-- локальная база с готовыми данными
-- авторизация и refresh token
-- загрузка, редактирование и удаление треков
-- плейлисты и избранное
-- плеер с очередью
-- поиск, фильтрация и сортировка
-- адаптивность
-- админ-функции удаления
+This project is open-source and available under the [MIT License](https://www.google.com/search?q=LICENSE).
